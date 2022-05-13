@@ -6,8 +6,8 @@ import csv
 # writer.writeheader()
 # file.close()
 
-file = open('data.csv',mode='a')
-writer = csv.DictWriter(file, ['AR','top_x','top_y','label'])
+file = open('data.csv', mode='a')
+writer = csv.DictWriter(file, ['AR', 'top_x', 'top_y', 'label'])
 
-writer.writerow({'AR':'1','top_x':2,'top_y':'3','label':'fall'})
+writer.writerow({'AR': '1', 'top_x': 2, 'top_y': '3', 'label': 'fall'})
 file.close()
