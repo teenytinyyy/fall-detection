@@ -42,8 +42,8 @@ if __name__ == '__main__':
     ar_data = []
     box_top_center_x = []
     box_top_center_y = []
-    box_buttom_right_x = []
-    box_buttom_right_y = []
+    box_bottom_right_x = []
+    box_bottom_right_y = []
     fall_target = []
     fall_data = []
     labels = []
@@ -92,12 +92,12 @@ if __name__ == '__main__':
                 ar.append(x_data[0])
                 box_top_center_x.append(x_data[1])
                 box_top_center_y.append(x_data[2])
-                box_buttom_right_x.append(x_data[3])
-                box_buttom_right_y.append(x_data[4])
+                box_bottom_right_x.append(x_data[3])
+                box_bottom_right_y.append(x_data[4])
                 
 
             for i in range(len(box_top_center_x)):
-                ang = math.atan2(abs(box_buttom_right_y[i] - box_top_center_y[i]), abs(box_buttom_right_x[i] - box_top_center_x[i]))
+                ang = math.atan2(abs(box_bottom_right_y[i] - box_top_center_y[i]), abs(box_bottom_right_x[i] - box_top_center_x[i]))
                 angle_list.append(ang)
 
             ang_v_list = get_diff_list(angle_list)
@@ -160,8 +160,8 @@ if __name__ == '__main__':
             avg_list = []
             box_top_center_x = []
             box_top_center_y = []
-            box_buttom_right_x = []
-            box_buttom_right_y = []
+            box_bottom_right_x = []
+            box_bottom_right_y = []
 
     print(len(fall_target))
     print(count)
