@@ -2,7 +2,14 @@ import csv
 import math
 import numpy as np
 from typing import List
+import random
 
+def random_indices(start: int, stop: int, step: int = 1) -> List[int]:
+    indices = [idx for idx in range(start, stop, step)]
+
+    random.shuffle(indices)
+
+    return indices
 
 def get_diff_list(angle_list: List[float], diff_range: int = 4) -> List[float]:
 
@@ -30,8 +37,8 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
 
 if __name__ == '__main__':
 
-    target = "svm_2cam_target.csv"
-    unused = "2cam.csv"
+    target = "../dataset/data/excel/2cam/svm_2cam_target.csv"
+    unused = "../dataset/data/excel/2cam/2cam.csv"
     video_start = 1
     video_end = 221
     target_range = 7
@@ -42,8 +49,8 @@ if __name__ == '__main__':
     ar_data = []
     box_top_center_x = []
     box_top_center_y = []
-    box_bottom_right_x = []
-    box_bottom_right_y = []
+    box_buttom_right_x = []
+    box_buttom_right_y = []
     fall_target = []
     fall_data = []
     labels = []
@@ -76,7 +83,7 @@ if __name__ == '__main__':
 
 
     for num in range(video_start, video_end+1):
-        file_path = "data (" + str(num) + ").csv"
+        file_path = "../dataset/data/excel/2cam/data (" + str(num) + ").csv"
         # file = open(file_name, newline='')    with用完會幫你關，單用open 要自己關
         # rows = csv.reader(file)
 
@@ -92,12 +99,12 @@ if __name__ == '__main__':
                 ar.append(x_data[0])
                 box_top_center_x.append(x_data[1])
                 box_top_center_y.append(x_data[2])
-                box_bottom_right_x.append(x_data[3])
-                box_bottom_right_y.append(x_data[4])
+                box_buttom_right_x.append(x_data[3])
+                box_buttom_right_y.append(x_data[4])
                 
 
             for i in range(len(box_top_center_x)):
-                ang = math.atan2(abs(box_bottom_right_y[i] - box_top_center_y[i]), abs(box_bottom_right_x[i] - box_top_center_x[i]))
+                ang = math.atan2(abs(box_buttom_right_y[i] - box_top_center_y[i]), abs(box_buttom_right_x[i] - box_top_center_x[i]))
                 angle_list.append(ang)
 
             ang_v_list = get_diff_list(angle_list)
@@ -143,7 +150,7 @@ if __name__ == '__main__':
                             frame_idx += radius
 
                         
-                        rev_idx[len(fall_target) - 1] = (num, frame_idx - radius)
+                        rev_idx[len(fall_target) - 1] = (num, frame_idx - radius, fall_target[-1])
                         # frame_idx += radius
 
                     count += 1
@@ -160,12 +167,11 @@ if __name__ == '__main__':
             avg_list = []
             box_top_center_x = []
             box_top_center_y = []
-            box_bottom_right_x = []
-            box_bottom_right_y = []
+            box_buttom_right_x = []
+            box_buttom_right_y = []
 
     print(len(fall_target))
     print(count)
-    print("162",fall_target[162],rev_idx[162])
     
 
     #print(ar_data[1])
@@ -186,19 +192,26 @@ if __name__ == '__main__':
     Y = np.array(fall_target)
     print(X.shape)
     print(Y.shape)
+    
+    random_idx = random_indices(0, len(X))
+    x_train = X[random_idx[0:int(0.7*len(X))]]
+    y_train = Y[random_idx[0:int(0.7*len(X))]]
+    x_test = X[random_idx[int(0.7*len(X)):len(X)]]
+    y_test = Y[random_idx[int(0.7*len(X)):len(X)]]
 
-    x_train, x_test, y_train, y_test = train_test_split(X, Y,
-                                                    test_size=0.3,
-                                                    random_state=89)
 
     clf = SVC()
     clf.fit(x_train, y_train)
-    joblib.dump(clf,'2cam.pkl')
+    joblib.dump(clf,'../states/2cam.pkl')
 
     y_predict = clf.predict(x_test)
-    diff_idx = np.where(y_test ^ y_predict > 0)[0]
-    for i in diff_idx:
+    diff_idx = np.where(y_test ^ y_predict > 0)[0].astype(np.int8)
+
+    idx_list = np.array(random_idx[int(0.7*len(X)):len(X)])[diff_idx]
+
+    for i in idx_list:
         print(rev_idx[i])
+        
     # print("XOR", y_test^y_predict)
     # plt.scatter(x_test[:,0], x_test[:,1], c=y_predict)
     # plt.savefig("t.png")
