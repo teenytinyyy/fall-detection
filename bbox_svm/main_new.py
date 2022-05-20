@@ -32,7 +32,7 @@ setup_logger()
     # 影片轉圖片指令 ffmpeg -i input.mkv out%d.bmp
 for num in range(1,2):
     for num1 in range(1, 9): 
-        checkpoint_threshhold = 0.6
+        checkpoint_threshold = 0.6
         histogram_thresh = 0.3  # 20%閥值
         test_mode = False
         h_thresh = True  # control testing true or false(test bool)
@@ -109,7 +109,7 @@ for num in range(1,2):
             offset = (0, 0)
 
             box_top = []
-            box_buttom = []
+            box_bottom = []
             bbox_l = []
             bbox_w = []
             bbox_r = []
@@ -119,7 +119,7 @@ for num in range(1,2):
             box_center_x = []
             box_center_y = []
             box_top_center= []
-            box_buttom_right = []
+            box_bottom_right = []
             
             c = 0
             count = -1
@@ -264,8 +264,8 @@ for num in range(1,2):
                     box_center_x.append(m_cX)
                     box_center_y.append(m_cY)
                     box_top_center.append((m_cX,m_y1))
-                    box_buttom_right.append((h_x2,m_y2))
-                    #box_buttom_right.append((m_x2,m_y2))
+                    box_bottom_right.append((h_x2,m_y2))
+                    #box_bottom_right.append((m_x2,m_y2))
                     frame_num.append(c)
                     bbox_r.append((m_y2-m_y1)/(m_x2-m_x1))
                     #bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
@@ -329,7 +329,7 @@ for num in range(1,2):
                             
                     
                     else: 
-                        if count >= video_frame*2 and 2 > abs(bbox_r[count - 4] - bbox_r[count]) > checkpoint_threshhold:
+                        if count >= video_frame*2 and 2 > abs(bbox_r[count - 4] - bbox_r[count]) > checkpoint_threshold:
                             print("bbox_r[c]:",bbox_r[count])
                             print("bbox_r[c-4]:",bbox_r[count - 4])
                             flag_checkpoint = True
@@ -359,6 +359,6 @@ for num in range(1,2):
                 # 将影像保存到文件
 
                 cv2.destroyAllWindows()
-                np.savetxt( './excel/Home_01/' + video_name + '.csv', np.c_[bbox_r, box_top_center, box_buttom_right, frame_num],delimiter=',')
+                np.savetxt( './excel/Home_01/' + video_name + '.csv', np.c_[bbox_r, box_top_center, box_bottom_right, frame_num],delimiter=',')
             #print(c-count)
                 
