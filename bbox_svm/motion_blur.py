@@ -1,54 +1,36 @@
-import os
-import re
-import cv2 # opencv library
-import numpy as np
-from os.path import isfile, join
-import matplotlib.pyplot as plt
 from natsort import natsorted
+import cv2
+import glob
+import numpy as np
+import os
 
-for j in range(2, 25):
-    for i in range(1,9) :
-        video_name = "./FDD_data_picture/data ("+ str(j) +"_" + str(i) +")" 
-        output_path = "Diff/data (" + str(j) + "_" + str(i) +")" + "/"
+def imread_list(file_name:list): 
+    img_list = [cv2.imread(file) for file in natsorted(glob.glob(file_name + "/*.jpg"))]
+    return img_list
+
+def img_diff(img_a: np.ndarray, img_b:np.ndarray): 
+    diff = abs(img_a.astype(np.float32) - img_b.astype(np.float32))
+    return diff.astype(np.uint8)
+
+def motion(img_list:list, img_a_idx: int, img_b_idx:int, thres:int): 
+    motion_img = sum(img_list[img_a_idx : img_b_idx : 2])
+    motion_img[motion_img < thres] = 0
+    return motion_img
+
+
+if __name__ == '__main__':
+    for j in range(1, 51):
+        #for k in range(1,9):
+        diff_list = []
+        #input = "./FDD_data_picture/data ("  + str(j) + "_" + str(k) + ")"
+        #output_path = "./motion/data ("  + str(j) + "_" + str(k) + ")/"
+        input = "./FDD_data_picture/data ("  + str(j) + ")"
+        output_path = "./motion_9/dataset_15/data_"  + str(j) + "/"
         if not os.path.isdir(output_path):
             os.makedirs(output_path)
-    # 导入视频帧
-    # get file names of the frames
-        col_frames = natsorted(os.listdir(video_name + "/"))
-        #print(col_frames)
-        # sort file names
-        #col_frames.sort(key=lambda f: int(re.sub('\D', '', f)))
-
-        # empty list to store the frames
-        col_images=[]
-
-        for i in col_frames:
-            # read the frames
-            #print(i)
-            img = cv2.imread(video_name + "/"+i)
-            # append the frames to the list
-            col_images.append(img)
-        i = 1
-        for i in range(len(col_images)-1):
-            for frame in [i, i+1]:
-                cv2.cvtColor(col_images[frame], cv2.COLOR_BGR2GRAY)
-
-
-            # 像素差值展示
-            # convert the frames to grayscale
-                grayA = cv2.cvtColor(col_images[i], cv2.COLOR_BGR2GRAY)
-                grayB = cv2.cvtColor(col_images[i+1], cv2.COLOR_BGR2GRAY)
-
-
-            # 图像预处理
-                diff_image = cv2.absdiff(grayB, grayA)
-                #cv2.imwrite("./Diff/" + video_name + "/"+ str(i+1) +"-diff.jpg",diff_image)
-                cv2.imwrite(output_path + "/" + str(i) +".jpg",diff_image)
-
-# for i in range(len(col_images)-1):
-
-#     # frame differencing
-#     grayA = cv2.cvtColor(col_images[i], cv2.COLOR_BGR2GRAY)
-#     grayB = cv2.cvtColor(col_images[i+1], cv2.COLOR_BGR2GRAY)
-#     diff_image = cv2.absdiff(grayB, grayA)
-#     cv2.imwrite("./FDD_data_picture/" + video_name + "/"+ str(i) +"-diff.jpg",diff_image)
+        images = imread_list(input)
+        for i in range(len(images) - 1): 
+            diff_list.append(img_diff(images[i], images[i + 1]))
+            if i >= 15: 
+                img = motion(diff_list, i - 15, i, 0)
+                cv2.imwrite(output_path + str(i) + ".jpg", img)
