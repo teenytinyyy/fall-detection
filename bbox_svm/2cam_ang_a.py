@@ -149,7 +149,6 @@ if __name__ == '__main__':
                             fall_target.append(0)
                             frame_idx += radius
 
-                        
                         rev_idx[len(fall_target) - 1] = (num, frame_idx - radius, fall_target[-1])
                         # frame_idx += radius
 
@@ -194,20 +193,21 @@ if __name__ == '__main__':
     print(Y.shape)
     
     random_idx = random_indices(0, len(X))
+    print(len(random_idx))
     x_train = X[random_idx[0:int(0.7*len(X))]]
     y_train = Y[random_idx[0:int(0.7*len(X))]]
     x_test = X[random_idx[int(0.7*len(X)):len(X)]]
     y_test = Y[random_idx[int(0.7*len(X)):len(X)]]
-
+    
 
     clf = SVC()
     clf.fit(x_train, y_train)
     joblib.dump(clf,'../states/2cam.pkl')
 
     y_predict = clf.predict(x_test)
-    diff_idx = np.where(y_test ^ y_predict > 0)[0].astype(np.int8)
-
-    idx_list = np.array(random_idx[int(0.7*len(X)):len(X)])[diff_idx]
+    diff_idx = np.where(y_test ^ y_predict > 0)[0]
+    print(diff_idx)
+    idx_list = np.array(random_idx[int(0.7*len(X)):len(X)])[diff_idx].astype(np.uint8)
 
     for i in idx_list:
         print(rev_idx[i])
@@ -217,8 +217,11 @@ if __name__ == '__main__':
     # plt.savefig("t.png")
     confusion_mat = np.zeros((2, 2))
     idx_pairs = np.array([y_predict.tolist(), y_test.tolist()]).T.tolist()
+    a = 0
     for idx_pair in idx_pairs:
+        print(a, y_test[a])
         confusion_mat[tuple(idx_pair)] += 1 
+        a += 1
     print(confusion_mat)
     result = y_test^y_predict
     #print("Label", y_test)
