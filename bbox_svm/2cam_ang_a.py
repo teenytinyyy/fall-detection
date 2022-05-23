@@ -2,7 +2,14 @@ import csv
 import math
 import numpy as np
 from typing import List
+import random
 
+def random_indices(start: int, stop: int, step: int = 1) -> List[int]:
+    indices = [idx for idx in range(start, stop, step)]
+
+    random.shuffle(indices)
+
+    return indices
 
 def get_diff_list(angle_list: List[float], diff_range: int = 4) -> List[float]:
 
@@ -30,8 +37,8 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
 
 if __name__ == '__main__':
 
-    target = "svm_2cam_target.csv"
-    unused = "2cam.csv"
+    target = "../dataset/data/excel/2cam/svm_2cam_target.csv"
+    unused = "../dataset/data/excel/2cam/2cam.csv"
     video_start = 1
     video_end = 221
     target_range = 7
@@ -76,7 +83,7 @@ if __name__ == '__main__':
 
 
     for num in range(video_start, video_end+1):
-        file_path = "data (" + str(num) + ").csv"
+        file_path = "../dataset/data/excel/2cam/data (" + str(num) + ").csv"
         # file = open(file_name, newline='')    with用完會幫你關，單用open 要自己關
         # rows = csv.reader(file)
 
@@ -142,8 +149,7 @@ if __name__ == '__main__':
                             fall_target.append(0)
                             frame_idx += radius
 
-                        
-                        rev_idx[len(fall_target) - 1] = (num, frame_idx - radius)
+                        rev_idx[len(fall_target) - 1] = (num, frame_idx - radius, fall_target[-1])
                         # frame_idx += radius
 
                     count += 1
@@ -165,7 +171,6 @@ if __name__ == '__main__':
 
     print(len(fall_target))
     print(count)
-    print("162",fall_target[162],rev_idx[162])
     
 
     #print(ar_data[1])
@@ -186,26 +191,37 @@ if __name__ == '__main__':
     Y = np.array(fall_target)
     print(X.shape)
     print(Y.shape)
-
-    x_train, x_test, y_train, y_test = train_test_split(X, Y,
-                                                    test_size=0.3,
-                                                    random_state=89)
+    
+    random_idx = random_indices(0, len(X))
+    print(len(random_idx))
+    x_train = X[random_idx[0:int(0.7*len(X))]]
+    y_train = Y[random_idx[0:int(0.7*len(X))]]
+    x_test = X[random_idx[int(0.7*len(X)):len(X)]]
+    y_test = Y[random_idx[int(0.7*len(X)):len(X)]]
+    
 
     clf = SVC()
     clf.fit(x_train, y_train)
-    joblib.dump(clf,'2cam.pkl')
+    joblib.dump(clf,'../states/2cam.pkl')
 
     y_predict = clf.predict(x_test)
     diff_idx = np.where(y_test ^ y_predict > 0)[0]
-    for i in diff_idx:
+    print(diff_idx)
+    idx_list = np.array(random_idx[int(0.7*len(X)):len(X)])[diff_idx].astype(np.uint8)
+
+    for i in idx_list:
         print(rev_idx[i])
+        
     # print("XOR", y_test^y_predict)
     # plt.scatter(x_test[:,0], x_test[:,1], c=y_predict)
     # plt.savefig("t.png")
     confusion_mat = np.zeros((2, 2))
     idx_pairs = np.array([y_predict.tolist(), y_test.tolist()]).T.tolist()
+    a = 0
     for idx_pair in idx_pairs:
+        print(a, y_test[a])
         confusion_mat[tuple(idx_pair)] += 1 
+        a += 1
     print(confusion_mat)
     result = y_test^y_predict
     #print("Label", y_test)

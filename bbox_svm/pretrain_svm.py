@@ -1,5 +1,6 @@
 import csv
 import math
+from xml.dom.minidom import Identified
 import numpy as np
 from typing import List
 
@@ -28,8 +29,8 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
 
 if __name__ == '__main__':
 
-    target = "./excel/target.csv"
-    video_start = 1
+    target = "./excel/svm_target.csv"
+    video_start = 111
     video_end = 221
     target_range = 7
     threshold = 0.6
@@ -48,6 +49,8 @@ if __name__ == '__main__':
     min_data = []
     target_start = []
     target_end = []
+    rev_idx = {}
+
     idx = 0
     count = 0
 
@@ -82,6 +85,7 @@ if __name__ == '__main__':
             ang_a_list = get_diff_list(ang_v_list)
             avg_list = get_avg_list(ang_a_list, avg_range)
 
+
             radius = 30
             frame_idx = 30
             while(True):
@@ -103,6 +107,8 @@ if __name__ == '__main__':
                         fall_data.append(ar_data)
 
                         if frame_idx-radius <= target_start[num-1] + target_range <= frame_idx + radius and frame_idx-radius <= target_start[num-1] <= frame_idx + radius:
+                            
+                            
                             fall_target.append(1)
                             print('video:', num)
                             print('picture:', frame_idx)
@@ -111,6 +117,8 @@ if __name__ == '__main__':
                         else:
                             fall_target.append(0)
                             frame_idx += radius
+
+                        rev_idx[len(fall_target) - 1] = (num, frame_idx - radius)
 
                     count += 1
                     frame_idx += 1
@@ -148,14 +156,23 @@ if __name__ == '__main__':
     print(X.shape)
     print(Y.shape)
 
-    svm = joblib.load(clf.pkl)
-    y_predict = clf.predict(X)
-    print("XOR", Y ^ y_predict)
-    plt.scatter(X[:, 0], X[:, 1], c=y_predict)
-    plt.savefig("t.png")
+    svm = joblib.load("2cam.pkl")
+    y_predict = svm.predict(X)
+    #print("XOR", Y ^ y_predict)
 
+    diff_idx = np.where(Y ^ y_predict > 0)[0]
+    for i in diff_idx:
+        print(rev_idx[i])
+
+    # plt.scatter(X[:, 0], X[:, 1], c=y_predict)
+    # plt.savefig("t.png")
+    confusion_mat = np.zeros((2, 2))
+    idx_pairs = np.array([y_predict.tolist(), Y.tolist()]).T.tolist()
+    for idx_pair in idx_pairs:
+        confusion_mat[tuple(idx_pair)] += 1 
+    print(confusion_mat)
     result = Y ^ y_predict
-    print("Label", Y)
+    #print("Label", Y)
     print(sum(Y))
     print("Accuracy: {:2f}% {} / {} / {}".format((1 - (result.sum() /
                                                        len(result))) * 100, sum(Y), result.sum(), len(Y)))
