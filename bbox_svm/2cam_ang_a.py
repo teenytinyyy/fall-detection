@@ -37,11 +37,11 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
 
 if __name__ == '__main__':
 
-    target = "./dataset/data/excel/2cam/svm_2cam_target.csv"
-    unused = "./dataset/data/excel/2cam/2cam.csv"
+    target = "../dataset/data/excel/2cam/svm_2cam_target.csv"
+    unused = "../dataset/data/excel/2cam/2cam.csv"
     video_start = 1
     video_end = 221
-    target_range = 7
+    target_range = 13
     threshold = 0.6
     avg_range = 13
     angle_list = []
@@ -77,7 +77,7 @@ if __name__ == '__main__':
             unused_num.append(int(row[0]))
 
     for num in range(video_start, video_end + 1):
-        file_path = "./dataset/data/excel/2cam/data (" + str(num) + ").csv"
+        file_path = "../dataset/data/excel/2cam/data (" + str(num) + ").csv"
         # file = open(file_name, newline='')  with用完會幫你關，單用open 要自己關
         # rows = csv.reader(file)
 
@@ -96,7 +96,8 @@ if __name__ == '__main__':
                 box_bottom_right_y.append(x_data[4])
 
             for i in range(len(box_top_center_x)):
-                ang = math.atan2(abs(box_bottom_right_y[i] - box_top_center_y[i]), abs(box_bottom_right_x[i] - box_top_center_x[i]))
+                ang = math.atan2(abs(box_bottom_right_y[i] - box_top_center_y[i]), abs(
+                    box_bottom_right_x[i] - box_top_center_x[i]))
                 angle_list.append(ang)
 
             ang_v_list = get_diff_list(angle_list)
@@ -122,15 +123,20 @@ if __name__ == '__main__':
                     # print(len(ar[frame_idx-radius:frame_idx + radius]))
                     if len(avg_list[frame_idx - radius:frame_idx + radius]) == radius * 2 and len(ar[frame_idx - radius:frame_idx + radius]) == radius * 2:
                         # ar_data.append(fall_data)
-                        ar_data.append(max(avg_list[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(min(avg_list[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(max(ar[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(min(ar[frame_idx - radius:frame_idx + radius]))
+                        ar_data.append(
+                            max(avg_list[frame_idx - radius:frame_idx + radius]))
+                        ar_data.append(
+                            min(avg_list[frame_idx - radius:frame_idx + radius]))
+                        ar_data.append(
+                            max(ar[frame_idx - radius:frame_idx + radius]))
+                        ar_data.append(
+                            min(ar[frame_idx - radius:frame_idx + radius]))
                         fall_data.append(ar_data)
                         # for plus in range(radius):
-                        #ar_data.append(avg_list[frame_idx-radius:frame_idx + radius] + ar[frame_idx-radius:frame_idx + radius])
+                        # ar_data.append(avg_list[frame_idx-radius:frame_idx + radius] + ar[frame_idx-radius:frame_idx + radius])
 
-                        if frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius and frame_idx - radius <= target_start[num - 1] <= frame_idx + radius:
+                        # if frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius and frame_idx - radius <= target_start[num - 1] <= frame_idx + radius:
+                        if frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius:                        
                             fall_target.append(1)
                             print('video:', num)
                             print('picture:', frame_idx)
@@ -141,7 +147,8 @@ if __name__ == '__main__':
                             fall_target.append(0)
                             frame_idx += radius
 
-                        rev_idx[len(fall_target) - 1] = (num, frame_idx - radius, fall_target[-1])
+                        rev_idx[len(fall_target) - 1] = (num,
+                                                         frame_idx - radius, fall_target[-1])
                         # frame_idx += radius
 
                     count += 1
@@ -211,7 +218,8 @@ if __name__ == '__main__':
 
     print("Diff count:{}".format(len(diff_dict.keys())))
 
-    idx_list = np.array(random_idx[int(0.7 * len(X)):len(X)])[diff_idx].astype(np.uint8)
+    idx_list = np.array(
+        random_idx[int(0.7 * len(X)):len(X)])[diff_idx].astype(np.uint8)
 
     # print("source info")
     # for i in idx_list:
@@ -236,5 +244,6 @@ if __name__ == '__main__':
     print(confusion_mat)
     result = y_test ^ y_predict
 
-    # print(sum(Y))
-    print("Accuracy: {:2f}% {} / {} / {}".format((1 - (result.sum() / len(result))) * 100, sum(y_test), result.sum(), len(y_test)))
+    print(sum(Y))
+    print("Accuracy: {:2f}% {} / {} / {}".format((1 - (result.sum() /
+          len(result))) * 100, sum(y_test), result.sum(), len(y_test)))

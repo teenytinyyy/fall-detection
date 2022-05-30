@@ -22,14 +22,7 @@ import math
 import glob
 setup_logger()
 
-# 加载其它一些库
-# 加载相关工具
-#input_path = "/home/ian/code/falldata/Office/office(1).avi"
 
-# input_path = "/home/ian/code/detectron2_repo/demo/bbox_middle/fall1"
-# out_put_img = "/home/ian/code/detectron2_repo/demo/bbox_middle/fall1/coffee(1)047.jpg"
-# 圖片轉影片指令 ffmpeg -i %1d.jpg -r 25 output.mp4
-# 影片轉圖片指令 ffmpeg -i input.mkv out%d.bmp
 #for num in range(1, 2):
 for num1 in range(1, 21):
     checkpoint_threshold = 0.6
@@ -45,7 +38,7 @@ for num1 in range(1, 21):
         test_bool = "true"
     else:
         test_bool = "false"
-    output_path = '../dataset/data/Diff/motion_9_diff/bbox_' + video_name + "/"
+    output_path = '../dataset/data/Diff/motion_9_diff/bbox_2p_' + video_name + "/"
     if not os.path.isdir(output_path):
         os.makedirs(output_path)
 
@@ -57,35 +50,9 @@ for num1 in range(1, 21):
         images = [cv2.imread(file) for file in natsorted(
             glob.glob("../dataset/data/Diff/motion_9_diff/" + video_name + "/*.jpg"))]
 
-        #cap = cv2.VideoCapture(input_path)
-        # 指定模型的配置配置文件路径及网络参数文件的路径
-        # 对于像下面这样写法的网络参数文件路径，程序在运行的时候就自动寻找，如果没有则下载。
-        # Instance segmentation model
-        #model_file_path = "/home/ian/code/detectron2_repo/configs/COCO-Detection/config_80.yaml"
-        #model_file_path = "/home/ian/code/detectron2_repo/tools/output/config.yaml"
-        #model_file_path = "/home/ian/code/detectron2_repo/configs/COCO-Detection/faster_rcnn_R_50_C4_3x.yaml"
-        #model_file_path = "/home/ian/code/detectron2_repo/tools/output_rcnn__ap=84/config.yaml"
-        #model_file_path = "/home/YJ/YJSVMFDA/PythonAPI/YJSVMFDA/SVMFDA/detectron_model/config.yaml"
         model_file_path = '../states/detectron_model/config.yaml'
-        #model_file_path = "/home/ian/code/detectron2_repo/tools/output_all_80_apmax/config.yaml"
-
-        #model_weights =  "/home/ian/code/detectron2_repo/tools/output/model_final.pth"
-        #model_weights = "/home/ian/code/detectron2_repo/model/model_final_f97cb7.pkl"
-        #model_weights = "/home/ian/code/detectron2_repo/model/model_final_80.pth"
-        #model_weights = "/home/ian/code/detectron2_repo/tools/output_rcnn__ap=84/model_final.pth"
         model_weights = "../states/detectron_model/model_final.pth"
-        #model_weights =  "/home/ian/code/detectron2_repo/tools/output_all_80_apmax/model_final.pth"
-        #svm_model_weights = "svm.model"
-        # if svm_model =="false":
         svm_model_weights = "../states/SVM_model/svm_true_fall101_new_v2_c3095.model"
-        # print(svm_model_weights)
-        #svm_model_weights = "svm_model/svm_true.model"
-        # else:
-        #svm_model_weights = "svm_model/svm_true_fall101_new_c1595.model"
-        #svm_model_weights = "svm_model/svm_true_fall101_new_v1_c3095.model"
-        #    svm_model_weights = "svm_model/svm_true_fall101_new_v2_c3095.model"
-        # 加载图片
-        # img = cv2.imread(input_path)
 
         # 创建一个detectron2配置
         cfg = get_cfg()
@@ -101,10 +68,6 @@ for num1 in range(1, 21):
 
         svm = joblib.load(svm_model_weights)
 
-        # 利用这个推断对加载的影像进行分析并得到结果
-        # 对于输出结果格式可以参考这里https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
-        #fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-        #out = cv2.VideoWriter('/home/ian/code/detectron2_repo/demo/output999.mp4',fourcc, 25.0, (320,  240))
         offset = (0, 0)
 
         box_top = []
@@ -132,16 +95,18 @@ for num1 in range(1, 21):
         flag2 = False
         flag_checkpoint = False
 
+        m_x1_p1 = 0
+        m_y1_p1 = 0
+        m_x2_p1 = 0
+        m_y2_p1 = 0
+
+
         def eucliDist(A, B):
             return math.sqrt(sum([(a - b)**2 for (a, b) in zip(A, B)]))
 
         print("images#:", len(images))
         for idx, frame in enumerate(images):
-            # print(ret)
-            # print(idx)
-
             outputs = predictor(frame)
-            # print(outputs)
 
             predictions = []
             for single_prediction in outputs:
@@ -155,12 +120,14 @@ for num1 in range(1, 21):
             predictions.append({"pred_boxes": single_prediction_cpu["pred_boxes"].tensor[box_selection_mask].data.numpy(),
                                 "scores": single_prediction_cpu["scores"][box_selection_mask].data.numpy(),
                                 "pred_masks": single_prediction_cpu["pred_masks"][box_selection_mask].data.numpy()})
-            # print(predictions)
-            # print(predictions[0]["pred_boxes"][1])
-            # print(predictions["pred_boxes"])
+
             if len(predictions[0]["pred_masks"]) != 0:  # 防呆 is not
                 # 第一個人的MASK拿出來，只測一人
                 array = predictions[0]["pred_masks"][0]
+                if len(predictions[0]["pred_masks"]) >= 2:
+                    array_p1 = predictions[0]["pred_masks"][1]
+                    polygons_p1 = Mask(array_p1).polygons()
+                    m_x1_p1, m_y1_p1, m_x2_p1, m_y2_p1 = polygons_p1.bbox()
 
                 count += 1
                 # print(count)
@@ -169,12 +136,7 @@ for num1 in range(1, 21):
                 m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
                 #binarizedImage = (predictions[0]["pred_masks"][0]  > 126) * 255
                 binarizedImage = predictions[0]["pred_masks"][0]
-                #  binarizedImage[binarizedImage == True] = 1
-                #  binarizedImage[binarizedImage == False] = 0
-                # print(binarizedImage)
                 horizontal_projection = np.sum(binarizedImage, axis=0)
-                # print(m_x1,m_y1,m_x2,m_y2)
-                # print(horizontal_projection)
                 y1_max = np.max(horizontal_projection)  # 鉛直投影
                 thresh_ = y1_max * histogram_thresh  # 1全部加起來最高的
                 # print(y1_max)
@@ -203,10 +165,12 @@ for num1 in range(1, 21):
                 m_cX = int((h_x1 + h_x2) / 2.0)
                 m_cY = int((new_m_y1 + m_y2) / 2.0)
             # cv2.circle(frame, (m_cX, m_cY), 4, (0, 255, 0), -1)
-                cv2.rectangle(frame, (h_x1, new_m_y1),
-                                (h_x2, m_y2), (0, 255, 0), 2)
+                #cv2.rectangle(frame, (h_x1, new_m_y1),
+                #                (h_x2, m_y2), (0, 255, 0), 4)
                 cv2.rectangle(frame, (m_x1, m_y1),
-                                (m_x2, m_y2), (0, 0, 255), 3)
+                                (m_x2, m_y2), (0, 255, 0), 3)
+                cv2.rectangle(frame, (m_x1_p1, m_y1_p1),
+                                (m_x2_p1, m_y2_p1), (0, 0, 255), 2)                                
             #frame = Mask(array).draw(frame, color=(0,0,255), alpha=0.5)
 
             bbox = predictions[0]["pred_boxes"]
@@ -219,25 +183,7 @@ for num1 in range(1, 21):
                 y2 += offset[1]
                 cX = int((x1 + x2) / 2.0)
                 cY = int((y1 + y2) / 2.0)
-                # box text and bar
-                #id = int(identities[i]) if identities is not None else 0
-                #color = self.compute_color_for_person_labels(id)
-                #label = '{}{:d}'.format("", id)
-                #t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 2, 2)[0]
-                # top
-                #cv2.circle(frame, (cX, y1), 6, (255, 0, 0), -1)
-                # button
-                #cv2.circle(frame, (cX, y2), 6, (0, 0, 255), -1)
-                # middle
-                #cv2.circle(frame, (cX, cY), 4, (0, 0, 255), -1)
-                #cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                #cv2.rectangle(img, (x1, y1), (x1 + t_size[0] + 3, y1 + t_size[1] + 4), color, -1)
-            # frame_num.append(c+1)
-            # box_center_x.append(m_cX)
-            # box_center_y.append(m_cY)
-            # box_top = y1/240FDD_data_picture           # box_buttom = y2/240
-            # bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
-            #box_r = (m_y2-new_m_y1)/(h_x2-h_x1)
+
 
             frame_width = int(frame.shape[1])
             frame_height = int(frame.shape[0])
