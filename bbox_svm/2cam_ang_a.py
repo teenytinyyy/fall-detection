@@ -59,6 +59,7 @@ if __name__ == '__main__':
     target_start = []
     target_end = []
     unused_num = []
+    y_dis_list = []
     idx = 0
     count = 0
     count_unused = 0
@@ -99,7 +100,11 @@ if __name__ == '__main__':
                 ang = math.atan2(abs(box_bottom_right_y[i] - box_top_center_y[i]), abs(
                     box_bottom_right_x[i] - box_top_center_x[i]))
                 angle_list.append(ang)
+                y_dis = box_top_center_y[i] - box_bottom_right_y[i]
+                y_dis_list.append(y_dis)
 
+            y_v_list = get_diff_list(y_dis_list)
+            y_a_list = get_diff_list(y_v_list)
             ang_v_list = get_diff_list(angle_list)
             ang_a_list = get_diff_list(ang_v_list)
             avg_list = get_avg_list(ang_a_list, avg_range)
@@ -131,16 +136,19 @@ if __name__ == '__main__':
                             max(ar[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
+                        ar_data.append(
+                            min(y_dis_list[frame_idx - radius:frame_idx + radius]))
                         fall_data.append(ar_data)
                         # for plus in range(radius):
                         # ar_data.append(avg_list[frame_idx-radius:frame_idx + radius] + ar[frame_idx-radius:frame_idx + radius])
 
                         # if frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius and frame_idx - radius <= target_start[num - 1] <= frame_idx + radius:
-                        if frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius:                        
+                        if frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius:
                             fall_target.append(1)
                             print('video:', num)
                             print('picture:', frame_idx)
                             print('label:', 1)
+                            print(min(y_dis_list[frame_idx - radius:frame_idx + radius]))
                             frame_idx += radius
                         else:
                             # print(0)
@@ -167,6 +175,9 @@ if __name__ == '__main__':
             box_top_center_y = []
             box_bottom_right_x = []
             box_bottom_right_y = []
+            y_dis_list = []
+            y_v_list = []
+            y_a_list = []
 
     print(len(fall_target))
     print(count)

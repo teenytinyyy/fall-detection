@@ -1,6 +1,8 @@
 import os
 import sys
 import shutil
+import json
+
 
 from pathlib import Path
 from os import listdir
@@ -11,6 +13,7 @@ from typing import List
 
 def get_extension(file_path: str):
     return os.path.splitext(file_path)
+
 
 def get_filename(file_path):
     return os.path.basename(file_path)
