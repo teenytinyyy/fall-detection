@@ -23,13 +23,26 @@ def get_diff_list(angle_list: List[float], diff_range: int = 4) -> List[float]:
     return diff_list
 
 
-def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
+def get_abs_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
 
     np_angle_list = np.array(angle_list)
 
     avg_list = []
     for idx in range(len(np_angle_list) - avg_range):
         avg = np.average(np.absolute(np_angle_list[idx:idx + avg_range]))
+        avg_list.append(avg)
+
+    return avg_list
+
+
+def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
+
+    np_angle_list = np.array(angle_list)
+
+    avg_list = []
+    for idx in range(len(np_angle_list) - avg_range):
+        #avg = np.average(np.absolute(np_angle_list[idx:idx + avg_range]))
+        avg = np.average(np_angle_list[idx:idx + avg_range])
         avg_list.append(avg)
 
     return avg_list
@@ -100,14 +113,17 @@ if __name__ == '__main__':
                 ang = math.atan2(abs(box_bottom_right_y[i] - box_top_center_y[i]), abs(
                     box_bottom_right_x[i] - box_top_center_x[i]))
                 angle_list.append(ang)
-                y_dis = box_top_center_y[i] - box_bottom_right_y[i]
-                y_dis_list.append(y_dis)
+                #y_dis = box_top_center_y[i] - box_bottom_right_y[i]
+                #y_dis_list.append(y_dis)
 
-            y_v_list = get_diff_list(y_dis_list)
-            y_a_list = get_diff_list(y_v_list)
+            #y_v_list = get_diff_list(y_dis_list)
+            #y_a_list = get_diff_list(y_v_list)
+            #y_a_avg_list = get_avg_list(y_a_list, 13)
+            y_top_dis = get_diff_list(box_top_center_y)
+            y_top_avg = get_avg_list(y_top_dis, avg_range)
             ang_v_list = get_diff_list(angle_list)
             ang_a_list = get_diff_list(ang_v_list)
-            avg_list = get_avg_list(ang_a_list, avg_range)
+            avg_list = get_abs_avg_list(ang_a_list, avg_range)
 
             # for frame_idx in range(len(avg_list)-30):
             #    print(frame_idx, max(avg_list[frame_idx:frame_idx + radius]) / (min(avg_list[frame_idx:frame_idx + radius]) + 1e-8))
@@ -130,14 +146,19 @@ if __name__ == '__main__':
                         # ar_data.append(fall_data)
                         ar_data.append(
                             max(avg_list[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(
-                            min(avg_list[frame_idx - radius:frame_idx + radius]))
+                        # ar_data.append(
+                        #     min(avg_list[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             max(ar[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(
-                            min(y_dis_list[frame_idx - radius:frame_idx + radius]))
+                        # ar_data.append(
+                        #     max(y_top_avg[frame_idx - radius:frame_idx + radius]))   
+                        # ar_data.append(
+                        #     min(y_top_avg[frame_idx - radius:frame_idx + radius]))                      
+                        # ar_data.append(
+                        #     min(y_a_avg_list[frame_idx - radius:frame_idx + radius]))
+                                                                               
                         fall_data.append(ar_data)
                         # for plus in range(radius):
                         # ar_data.append(avg_list[frame_idx-radius:frame_idx + radius] + ar[frame_idx-radius:frame_idx + radius])
@@ -148,7 +169,10 @@ if __name__ == '__main__':
                             print('video:', num)
                             print('picture:', frame_idx)
                             print('label:', 1)
-                            print(min(y_dis_list[frame_idx - radius:frame_idx + radius]))
+                            # print(min(y_a_avg_list[frame_idx - radius:frame_idx + radius]))
+                            print(min(y_top_avg[frame_idx - radius:frame_idx + radius]))
+                            print(max(y_top_avg[frame_idx - radius:frame_idx + radius]))
+
                             frame_idx += radius
                         else:
                             # print(0)
