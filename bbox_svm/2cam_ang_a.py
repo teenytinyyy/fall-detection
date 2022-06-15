@@ -69,6 +69,8 @@ if __name__ == '__main__':
     labels = []
     max_data = []
     min_data = []
+    sec_data = []
+    sec_fall_data = []
     target_start = []
     target_end = []
     unused_num = []
@@ -146,20 +148,21 @@ if __name__ == '__main__':
                         # ar_data.append(fall_data)
                         ar_data.append(
                             max(avg_list[frame_idx - radius:frame_idx + radius]))
-                        # ar_data.append(
-                        #     min(avg_list[frame_idx - radius:frame_idx + radius]))
+                        #ar_data.append(
+                        #    min(avg_list[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             max(ar[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
                         # ar_data.append(
                         #     max(y_top_avg[frame_idx - radius:frame_idx + radius]))   
-                        # ar_data.append(
-                        #     min(y_top_avg[frame_idx - radius:frame_idx + radius]))                      
+                        sec_data.append(
+                            min(y_top_avg[frame_idx - radius:frame_idx + radius]))                      
                         # ar_data.append(
                         #     min(y_a_avg_list[frame_idx - radius:frame_idx + radius]))
                                                                                
                         fall_data.append(ar_data)
+                        sec_fall_data.append(sec_data)
                         # for plus in range(radius):
                         # ar_data.append(avg_list[frame_idx-radius:frame_idx + radius] + ar[frame_idx-radius:frame_idx + radius])
 
@@ -186,6 +189,7 @@ if __name__ == '__main__':
                     count += 1
                     frame_idx += 1
                     ar_data = []
+                    sec_data = []
                     continue
 
                 frame_idx += 1
@@ -220,29 +224,44 @@ if __name__ == '__main__':
     # fall_target = open(fall_target, newline='')
     # rows = csv.reader(fall_target)
 
-    X = np.array(fall_data)
-    Y = np.array(fall_target)
+    X_1 = np.array(fall_data)
+    Y_1 = np.array(fall_target)
+    X_2 = np.array(sec_fall_data)
 
-    random_idx = random_indices(0, len(X))
-    x_train = X[random_idx[0:int(0.7 * len(X))]]
-    y_train = Y[random_idx[0:int(0.7 * len(X))]]
-    x_test = X[random_idx[int(0.7 * len(X)):len(X)]]
-    y_test = Y[random_idx[int(0.7 * len(X)):len(X)]]
+
+    random_idx = random_indices(0, len(X_1))
+    x_1_train = X_1[random_idx[0:int(0.7 * len(X_1))]]
+    y_1_train = Y_1[random_idx[0:int(0.7 * len(X_1))]]
+    x_1_test = X_1[random_idx[int(0.7 * len(X_1)):len(X_1)]]
+    y_1_test = Y_1[random_idx[int(0.7 * len(X_1)):len(X_1)]]
+
+    x_2_train = X_2[random_idx[0:int(0.7 * len(X_2))]]
+    x_2_test = X_2[random_idx[int(0.7 * len(X_2)):len(X_2)]]
+
 
     clf = SVC()
-    clf.fit(x_train, y_train)
+    clf.fit(x_1_train, y_1_train)
     # joblib.dump(clf, '../states/2cam.pkl')
+    clf_2 = SVC()
+    clf_2.fit(x_2_train, y_1_train)
 
-    y_predict = clf.predict(x_test)
-    diff_idx = np.where(y_test ^ y_predict > 0)[0]
+    y_1_predict = clf.predict(x_1_test)
+    y_2_predict = clf_2.predict(x_2_test)
+    # for i in range(len(y_1_predict)):
+    #     if y_1_predict[i] == 1 and y_2_predict[i] == 0:
+    #         y_1_predict[i] = 0
+        # elif y_1_predict[i] == 0 and y_2_predict[i] == 1:
+        #     y_1_predict[i] = 1
+            # print(i)
+    diff_idx = np.where(y_1_test ^ y_1_predict > 0)[0]              
 
     print("diff indices:")
     print(diff_idx)
 
     diff_dict = {}
     for i in diff_idx:
-        restored_idx = random_idx[int(0.7 * len(X)):len(X)][i]
-        diff_dict[restored_idx] = [restored_idx, y_predict[i], y_test[i]]
+        restored_idx = random_idx[int(0.7 * len(X_1)):len(X_1)][i]
+        diff_dict[restored_idx] = [restored_idx, y_1_predict[i], y_1_test[i]]
         print(rev_idx[restored_idx], diff_dict[restored_idx])
 
         try:
@@ -254,7 +273,7 @@ if __name__ == '__main__':
     print("Diff count:{}".format(len(diff_dict.keys())))
 
     idx_list = np.array(
-        random_idx[int(0.7 * len(X)):len(X)])[diff_idx].astype(np.uint8)
+        random_idx[int(0.7 * len(X_1)):len(X_1)])[diff_idx].astype(np.uint8)
 
     # print("source info")
     # for i in idx_list:
@@ -268,7 +287,7 @@ if __name__ == '__main__':
     #     print("rev", k, v)
 
     confusion_mat = np.zeros((2, 2))
-    idx_pairs = np.array([y_predict.tolist(), y_test.tolist()]).T.tolist()
+    idx_pairs = np.array([y_1_predict.tolist(), y_1_test.tolist()]).T.tolist()
     a = 0
     for idx_pair in idx_pairs:
         # print("gt", Y[random_idx[int(0.7 * len(X)):len(X)][a]], y_test[a])
@@ -277,8 +296,8 @@ if __name__ == '__main__':
 
     print("confusion matrix")
     print(confusion_mat)
-    result = y_test ^ y_predict
+    result = y_1_test ^ y_1_predict
 
-    print(sum(Y))
+    print(sum(Y_1))
     print("Accuracy: {:2f}% {} / {} / {}".format((1 - (result.sum() /
-          len(result))) * 100, sum(y_test), result.sum(), len(y_test)))
+          len(result))) * 100, sum(y_1_test), result.sum(), len(y_1_test)))
