@@ -30,7 +30,7 @@ def get_abs_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float
 
     avg_list = []
     for idx in range(len(np_angle_list) - avg_range):
-        avg = np.average(np.absolute(np_angle_list[idx : idx + avg_range]))
+        avg = np.average(np.absolute(np_angle_list[idx: idx + avg_range]))
         avg_list.append(avg)
 
     return avg_list
@@ -43,7 +43,7 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
     avg_list = []
     for idx in range(len(np_angle_list) - avg_range):
         # avg = np.average(np.absolute(np_angle_list[idx:idx + avg_range]))
-        avg = np.average(np_angle_list[idx : idx + avg_range])
+        avg = np.average(np_angle_list[idx: idx + avg_range])
         avg_list.append(avg)
 
     return avg_list
@@ -51,11 +51,11 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
 
 def test_svm_classify(data: np.ndarray, target: np.ndarray, train_ratio: float = 0.7):
     randomized_indices = random_indices(0, len(data))
-    x_train = data[randomized_indices[0 : int(train_ratio * len(data))]]
-    y_train = target[randomized_indices[0 : int(train_ratio * len(data))]]
+    x_train = data[randomized_indices[0: int(train_ratio * len(data))]]
+    y_train = target[randomized_indices[0: int(train_ratio * len(data))]]
 
-    x_test = data[randomized_indices[int(train_ratio * len(data)) : len(data)]]
-    y_test = target[randomized_indices[int(train_ratio * len(data)) : len(data)]]
+    x_test = data[randomized_indices[int(train_ratio * len(data)): len(data)]]
+    y_test = target[randomized_indices[int(train_ratio * len(data)): len(data)]]
 
     clf = SVC()
     clf.fit(x_train, y_train)
@@ -65,7 +65,7 @@ def test_svm_classify(data: np.ndarray, target: np.ndarray, train_ratio: float =
 
     diff_dict = {}
     for i in diff_indices:
-        restored_idx = randomized_indices[int(0.7 * len(data)) : len(data)][i]
+        restored_idx = randomized_indices[int(0.7 * len(data)): len(data)][i]
         restored_diff_item = [restored_idx, y_predict[i], y_test[i]]
         diff_dict[restored_idx] = restored_diff_item
 
@@ -183,20 +183,20 @@ if __name__ == "__main__":
                     # print(len(avg_list[frame_idx-radius:frame_idx + radius]))
                     # fall_data.append(ar[frame_idx-radius:frame_idx + radius])
                     # print(len(ar[frame_idx-radius:frame_idx + radius]))
-                    if (len(avg_list[frame_idx - radius : frame_idx + radius]) == radius * 2 and len(ar[frame_idx - radius : frame_idx + radius]) == radius * 2):
+                    if (len(avg_list[frame_idx - radius: frame_idx + radius]) == radius * 2 and len(ar[frame_idx - radius: frame_idx + radius]) == radius * 2):
                         # ar_data.append(fall_data)
                         ar_data.append(
                             max(avg_list[frame_idx - radius:frame_idx + radius]))
-                        #ar_data.append(
+                        # ar_data.append(
                         #    min(avg_list[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             max(ar[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
                         # ar_data.append(
-                        #     max(y_top_avg[frame_idx - radius:frame_idx + radius]))   
+                        #     max(y_top_avg[frame_idx - radius:frame_idx + radius]))
                         sec_data.append(
-                            min(y_top_avg[frame_idx - radius:frame_idx + radius]))                      
+                            min(y_top_avg[frame_idx - radius:frame_idx + radius]))
                         # ar_data.append(
                         #     min(y_a_avg_list[frame_idx - radius:frame_idx + radius]))
 
@@ -213,10 +213,10 @@ if __name__ == "__main__":
                             print("label:", 1)
                             # print(min(y_a_avg_list[frame_idx - radius:frame_idx + radius]))
                             print(
-                                min(y_top_avg[frame_idx - radius : frame_idx + radius])
+                                min(y_top_avg[frame_idx - radius: frame_idx + radius])
                             )
                             print(
-                                max(y_top_avg[frame_idx - radius : frame_idx + radius])
+                                max(y_top_avg[frame_idx - radius: frame_idx + radius])
                             )
 
                             frame_idx += radius
@@ -268,7 +268,6 @@ if __name__ == "__main__":
     Y_1 = np.array(fall_target)
     X_2 = np.array(sec_fall_data)
 
-
     random_idx = random_indices(0, len(X_1))
     x_1_train = X_1[random_idx[0:int(0.7 * len(X_1))]]
     y_1_train = Y_1[random_idx[0:int(0.7 * len(X_1))]]
@@ -277,7 +276,6 @@ if __name__ == "__main__":
 
     x_2_train = X_2[random_idx[0:int(0.7 * len(X_2))]]
     x_2_test = X_2[random_idx[int(0.7 * len(X_2)):len(X_2)]]
-
 
     clf = SVC()
     clf.fit(x_1_train, y_1_train)
@@ -290,10 +288,10 @@ if __name__ == "__main__":
     # for i in range(len(y_1_predict)):
     #     if y_1_predict[i] == 1 and y_2_predict[i] == 0:
     #         y_1_predict[i] = 0
-        # elif y_1_predict[i] == 0 and y_2_predict[i] == 1:
-        #     y_1_predict[i] = 1
-            # print(i)
-    diff_idx = np.where(y_1_test ^ y_1_predict > 0)[0]              
+    # elif y_1_predict[i] == 0 and y_2_predict[i] == 1:
+    #     y_1_predict[i] = 1
+    # print(i)
+    diff_idx = np.where(y_1_test ^ y_1_predict > 0)[0]
 
     print("diff indices:")
     print(diff_idx)
