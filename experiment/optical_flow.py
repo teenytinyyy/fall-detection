@@ -1,77 +1,68 @@
 import cv2 as cv
+import cv2
 import numpy as np
+from utils import files as file_utils
 
 
-# The video feed is read in as
-# a VideoCapture object
-cap = cv.VideoCapture("videoplayback.mp4")
+def display_optical_flow(folder_path: str, frame_per_ms: int = 10):
+    img_path_list = file_utils.get_files(folder_path)
 
-# ret = a boolean return value from
-# getting the frame, first_frame = the
-# first frame in the entire video sequence
-ret, first_frame = cap.read()
+    def filename_key(x: str):
+        filename, _ = file_utils.get_extension(file_utils.get_filename(x))
+        filename = filename.zfill(4)
+        return filename
 
-# Converts frame to grayscale because we
-# only need the luminance channel for
-# detecting edges - less computationally
-# expensive
-prev_gray = cv.cvtColor(first_frame, cv.COLOR_BGR2GRAY)
+    img_path_list.sort(key=filename_key)
 
-# Creates an image filled with zero
-# intensities with the same dimensions
-# as the frame
-mask = np.zeros_like(first_frame)
+    first_frame = cv2.imread(img_path_list[0])
+    prev_gray = cv.cvtColor(first_frame, cv.COLOR_BGR2GRAY)
 
-# Sets image saturation to maximum
-mask[..., 1] = 255
+    mask = np.zeros_like(first_frame)
 
-while(cap.isOpened()):
+    # Sets image saturation to maximum
+    mask[..., 1] = 255
 
-    # ret = a boolean return value from getting
-    # the frame, frame = the current frame being
-    # projected in the video
-    ret, frame = cap.read()
+    for idx, img_path in enumerate(img_path_list):
 
-    # Opens a new window and displays the input
-    # frame
-    cv.imshow("input", frame)
+        print("processing image {} {}/{}".format(img_path, idx, len(img_path_list)))
 
-    # Converts each frame to grayscale - we previously
-    # only converted the first frame to grayscale
-    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        frame = cv2.imread(img_path)
 
-    # Calculates dense optical flow by Farneback method
-    flow = cv.calcOpticalFlowFarneback(prev_gray, gray,
-                                       None,
-                                       0.5, 3, 15, 3, 5, 1.2, 0)
+        # Opens a new window and displays the input
+        # frame
+        cv.imshow("input", frame)
 
-    # Computes the magnitude and angle of the 2D vectors
-    magnitude, angle = cv.cartToPolar(flow[..., 0], flow[..., 1])
+        # Converts each frame to grayscale - we previously
+        # only converted the first frame to grayscale
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
-    # Sets image hue according to the optical flow
-    # direction
-    mask[..., 0] = angle * 180 / np.pi / 2
+        # Calculates dense optical flow by Farneback method
+        flow = cv.calcOpticalFlowFarneback(prev_gray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
 
-    # Sets image value according to the optical flow
-    # magnitude (normalized)
-    mask[..., 2] = cv.normalize(magnitude, None, 0, 255, cv.NORM_MINMAX)
+        # Computes the magnitude and angle of the 2D vectors
+        magnitude, angle = cv.cartToPolar(flow[..., 0], flow[..., 1])
 
-    # Converts HSV to RGB (BGR) color representation
-    rgb = cv.cvtColor(mask, cv.COLOR_HSV2BGR)
+        # Sets image hue according to the optical flow
+        # direction
+        mask[..., 0] = angle * 180 / np.pi / 2
 
-    # Opens a new window and displays the output frame
-    cv.imshow("dense optical flow", rgb)
+        # Sets image value according to the optical flow
+        # magnitude (normalized)
+        mask[..., 2] = cv.normalize(magnitude, None, 0, 255, cv.NORM_MINMAX)
 
-    # Updates previous frame
-    prev_gray = gray
+        # Converts HSV to RGB (BGR) color representation
+        rgb = cv.cvtColor(mask, cv.COLOR_HSV2BGR)
 
-    # Frames are read by intervals of 1 millisecond. The
-    # programs breaks out of the while loop when the
-    # user presses the 'q' key
-    if cv.waitKey(1) & 0xFF == ord('q'):
-        break
+        # Opens a new window and displays the output frame
+        cv.imshow("dense optical flow", rgb)
 
-# The following frees up resources and
-# closes all windows
-cap.release()
-cv.destroyAllWindows()
+        # Updates previous frame
+        prev_gray = gray
+
+        # Frames are read by intervals of 1 millisecond. The
+        # programs breaks out of the while loop when the
+        # user presses the 'q' key
+        if cv.waitKey(frame_per_ms) & 0xFF == ord('q'):
+            break
+
+    cv.destroyAllWindows()
