@@ -1,7 +1,7 @@
 import csv
 import math
 import numpy as np
-from typing import List
+from typing import Dict, List
 import random
 from sklearn.svm import SVC
 
@@ -49,13 +49,14 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
     return avg_list
 
 
-def test_svm_classify(data: np.ndarray, target: np.ndarray, train_ratio: float = 0.7):
+def test_svm_classify(data: np.ndarray, target: np.ndarray, rev_idx: Dict, train_ratio: float = 0.7):
     randomized_indices = random_indices(0, len(data))
     x_train = data[randomized_indices[0: int(train_ratio * len(data))]]
     y_train = target[randomized_indices[0: int(train_ratio * len(data))]]
 
     x_test = data[randomized_indices[int(train_ratio * len(data)): len(data)]]
-    y_test = target[randomized_indices[int(train_ratio * len(data)): len(data)]]
+    y_test = target[randomized_indices[int(
+        train_ratio * len(data)): len(data)]]
 
     clf = SVC()
     clf.fit(x_train, y_train)
@@ -69,11 +70,8 @@ def test_svm_classify(data: np.ndarray, target: np.ndarray, train_ratio: float =
         restored_diff_item = [restored_idx, y_predict[i], y_test[i]]
         diff_dict[restored_idx] = restored_diff_item
 
-        print(
-            "Diff at index {}: prediction: {} <-> ground truth: {}".format(
-                restored_diff_item[0], restored_diff_item[1], restored_diff_item[2]
-            )
-        )
+        print("Diff at index {}: prediction: {} <-> ground truth: {}".format(
+            rev_idx[restored_idx], restored_diff_item[1], restored_diff_item[2]))
 
     # builds confusion matrix
     confusion_mat = np.zeros((2, 2))
@@ -108,6 +106,8 @@ if __name__ == "__main__":
     min_data = []
     sec_data = []
     sec_fall_data = []
+    N3_data = []
+    N3_fall_data = []
     target_start = []
     target_end = []
     unused_num = []
@@ -154,74 +154,65 @@ if __name__ == "__main__":
                     abs(box_bottom_right_x[i] - box_top_center_x[i]),
                 )
                 angle_list.append(ang)
-                # y_dis = box_top_center_y[i] - box_bottom_right_y[i]
-                # y_dis_list.append(y_dis)
 
-            # y_v_list = get_diff_list(y_dis_list)
-            # y_a_list = get_diff_list(y_v_list)
-            # y_a_avg_list = get_avg_list(y_a_list, 13)
             y_top_dis = get_diff_list(box_top_center_y)
+            # y_top_v = get_diff_list(y_top_dis)
             y_top_avg = get_avg_list(y_top_dis, avg_range)
             ang_v_list = get_diff_list(angle_list)
             ang_a_list = get_diff_list(ang_v_list)
             avg_list = get_abs_avg_list(ang_a_list, avg_range)
 
-            # for frame_idx in range(len(avg_list)-30):
-            #    print(frame_idx, max(avg_list[frame_idx:frame_idx + radius]) / (min(avg_list[frame_idx:frame_idx + radius]) + 1e-8))
-
             radius = 30
             frame_idx = 30
             while True:
 
-                # print(frame_idx)
                 if len(ar) - 4 <= frame_idx or len(avg_list) - radius <= frame_idx:
                     break
 
                 if 2 > abs(ar[frame_idx] - ar[frame_idx + 4]) >= threshold:
 
-                    # fall_data.append(avg_list[frame_idx-radius:frame_idx + radius])
-                    # print(len(avg_list[frame_idx-radius:frame_idx + radius]))
-                    # fall_data.append(ar[frame_idx-radius:frame_idx + radius])
-                    # print(len(ar[frame_idx-radius:frame_idx + radius]))
                     if (len(avg_list[frame_idx - radius: frame_idx + radius]) == radius * 2 and len(ar[frame_idx - radius: frame_idx + radius]) == radius * 2):
-                        # ar_data.append(fall_data)
                         ar_data.append(
                             max(avg_list[frame_idx - radius:frame_idx + radius]))
-                        # ar_data.append(
-                        #    min(avg_list[frame_idx - radius:frame_idx + radius]))
+                        ar_data.append(
+                           min(avg_list[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             max(ar[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
-                        # ar_data.append(
+
+                        sec_data.append(
+                            max(ar[frame_idx - radius:frame_idx + radius]))
+                        sec_data.append(
+                            min(ar[frame_idx - radius:frame_idx + radius]))
+                        # sec_data.append(
                         #     max(y_top_avg[frame_idx - radius:frame_idx + radius]))
                         sec_data.append(
                             min(y_top_avg[frame_idx - radius:frame_idx + radius]))
-                        # ar_data.append(
-                        #     min(y_a_avg_list[frame_idx - radius:frame_idx + radius]))
+                        # sec_data.append(
+                        #    max(avg_list[frame_idx - radius:frame_idx + radius]))
+
+                        N3_data.append(
+                            min(y_top_avg[frame_idx - radius:frame_idx + radius]))
+                        N3_data.append(
+                            max(avg_list[frame_idx - radius:frame_idx + radius]))
+                        #N3_data.append(
+                        #    max(ar[frame_idx - radius:frame_idx + radius]))
+                        #N3_data.append(
+                        #    min(ar[frame_idx - radius:frame_idx + radius]))
 
                         fall_data.append(ar_data)
                         sec_fall_data.append(sec_data)
-                        # for plus in range(radius):
-                        # ar_data.append(avg_list[frame_idx-radius:frame_idx + radius] + ar[frame_idx-radius:frame_idx + radius])
+                        N3_fall_data.append(N3_data)
 
-                        # if frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius and frame_idx - radius <= target_start[num - 1] <= frame_idx + radius:
                         if (frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius):
                             fall_target.append(1)
                             print("video:", num)
                             print("picture:", frame_idx)
                             print("label:", 1)
-                            # print(min(y_a_avg_list[frame_idx - radius:frame_idx + radius]))
-                            print(
-                                min(y_top_avg[frame_idx - radius: frame_idx + radius])
-                            )
-                            print(
-                                max(y_top_avg[frame_idx - radius: frame_idx + radius])
-                            )
 
                             frame_idx += radius
                         else:
-                            # print(0)
                             fall_target.append(0)
                             frame_idx += radius
 
@@ -230,12 +221,12 @@ if __name__ == "__main__":
                             frame_idx - radius,
                             fall_target[-1],
                         )
-                        # frame_idx += radius
 
                     count += 1
                     frame_idx += 1
                     ar_data = []
                     sec_data = []
+                    N3_data = []
                     continue
 
                 frame_idx += 1
@@ -250,24 +241,22 @@ if __name__ == "__main__":
             box_bottom_right_x = []
             box_bottom_right_y = []
             y_dis_list = []
-            y_v_list = []
-            y_a_list = []
+            y_top_v = []
+            y_top_a = []
 
     print(len(fall_target))
     print(count)
 
-    # print(ar_data[1])
-    # np.savetxt( './excel/fall_data.csv', data, delimiter=',')
-
-    # fall_data = open(fall_data, newline='')
-    # rows = csv.reader(fall_data)
-    # fall_target = open(fall_target, newline='')
-    # rows = csv.reader(fall_target)
-
     X_1 = np.array(fall_data)
-    Y_1 = np.array(fall_target)
+    Y = np.array(fall_target)
     X_2 = np.array(sec_fall_data)
+    X_3 = np.array(N3_fall_data)
 
+    test_svm_classify(X_1, Y, rev_idx, 0.7)
+    test_svm_classify(X_2, Y, rev_idx, 0.7)
+    test_svm_classify(X_3, Y, rev_idx, 0.7)
+
+'''
     random_idx = random_indices(0, len(X_1))
     x_1_train = X_1[random_idx[0:int(0.7 * len(X_1))]]
     y_1_train = Y_1[random_idx[0:int(0.7 * len(X_1))]]
@@ -302,11 +291,6 @@ if __name__ == "__main__":
         diff_dict[restored_idx] = [restored_idx, y_1_predict[i], y_1_test[i]]
         print(rev_idx[restored_idx], diff_dict[restored_idx])
 
-        try:
-            assert rev_idx[restored_idx][2] == diff_dict[restored_idx][2]
-
-        except AssertionError:
-            print("ERROR gt not match")
 
     print("Diff count:{}".format(len(diff_dict.keys())))
 
@@ -339,3 +323,4 @@ if __name__ == "__main__":
     print(sum(Y_1))
     print("Accuracy: {:2f}% {} / {} / {}".format((1 - (result.sum() /
           len(result))) * 100, sum(y_1_test), result.sum(), len(y_1_test)))
+'''
