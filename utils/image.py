@@ -1,8 +1,10 @@
+from typing import List
 from natsort import natsorted
 import cv2
 import glob
 import numpy as np
-import os
+
+from utils import files as file_utils
 
 
 def batch_read_img(file_name: str):
@@ -10,14 +12,39 @@ def batch_read_img(file_name: str):
     return img_list
 
 
-def img_diff(img_a: np.ndarray, img_b: np.ndarray):
+def read_from_folder(folder_path: str) -> List[np.ndarray]:
+    img_path_list = file_utils.get_files(folder_path)
+    img_list = []
+
+    def filename_key(x: str):
+        filename, _ = file_utils.get_extension(file_utils.get_filename(x))
+        filename = filename.zfill(4)
+        return filename
+
+    img_path_list.sort(key=filename_key)
+
+    for img_path in img_path_list:
+        img_list.append(cv2.imread(img_path))
+
+    return img_list
+
+
+def diff(img_a: np.ndarray, img_b: np.ndarray, tolerance: int = 5) -> np.ndarray:
     diff = np.abs(img_a.astype(np.float32) - img_b.astype(np.float32))  # type: ignore
+    diff[diff < tolerance] = 0
     return diff.astype(np.uint8)
 
 
-def motion(img_list: list, img_a: int, img_b: int):
-    motion_img = sum(img_list[img_a: img_b])
-    return motion_img
+def motion_blur(img_arr: np.ndarray, coefficients: List[float] = []) -> np.ndarray:
+    if not coefficients:
+        coefficients = [1 for _ in range(len(img_arr))]
+
+    for i in range(len(img_arr)):
+        img_arr[i] = img_arr[i].astype(np.uint8) * coefficients[i]
+
+    motion_img = np.sum(img_arr, axis=0) / len(img_arr)
+
+    return motion_img.astype(np.uint8)
 
 
 def resize(img: np.ndarray, new_size: int):
@@ -31,17 +58,15 @@ def resize(img: np.ndarray, new_size: int):
     return img_new
 
 
-if __name__ == '__main__':
-    for j in range(1, 25):
-        for k in range(1, 9):
-            diff_list = []
-            input = "./FDD_data_picture/data (" + str(j) + "_" + str(k) + ")"
-            output_path = "./motion/data (" + str(j) + "_" + str(k) + ")/"
-            if not os.path.isdir(output_path):
-                os.makedirs(output_path)
-            images = batch_read_img(input)
-            for i in range(len(images) - 1):
-                diff_list.append(img_diff(images[i], images[i + 1]))
-                if i >= 4:
-                    img = motion(diff_list, i - 4, i)
-                    cv2.imwrite(output_path + str(i) + ".jpg", img)
+def play_img_seq(img_list: List[np.ndarray], frame_per_ms: int = 10) -> None:
+
+    for idx, frame in enumerate(img_list):
+
+        print("processing image {}/{}".format(idx, len(img_list)))
+
+        cv2.imshow("image sequence", frame)
+
+        if cv2.waitKey(frame_per_ms) & 0xFF == ord('q'):
+            break
+
+    cv2.destroyAllWindows()

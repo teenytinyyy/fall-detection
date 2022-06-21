@@ -1,4 +1,3 @@
-import cv2 as cv
 import cv2
 import numpy as np
 from utils import files as file_utils
@@ -15,7 +14,7 @@ def display_optical_flow(folder_path: str, frame_per_ms: int = 10):
     img_path_list.sort(key=filename_key)
 
     first_frame = cv2.imread(img_path_list[0])
-    prev_gray = cv.cvtColor(first_frame, cv.COLOR_BGR2GRAY)
+    prev_gray = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
 
     mask = np.zeros_like(first_frame)
 
@@ -30,17 +29,19 @@ def display_optical_flow(folder_path: str, frame_per_ms: int = 10):
 
         # Opens a new window and displays the input
         # frame
-        cv.imshow("input", frame)
+        cv2.imshow("input", frame)
 
         # Converts each frame to grayscale - we previously
         # only converted the first frame to grayscale
-        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        gray = cv2.GaussianBlur(gray, ksize=(3, 3), sigmaX=0)
 
         # Calculates dense optical flow by Farneback method
-        flow = cv.calcOpticalFlowFarneback(prev_gray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+        flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
 
         # Computes the magnitude and angle of the 2D vectors
-        magnitude, angle = cv.cartToPolar(flow[..., 0], flow[..., 1])
+        magnitude, angle = cv2.cartToPolar(flow[..., 0], flow[..., 1])
 
         # Sets image hue according to the optical flow
         # direction
@@ -48,13 +49,13 @@ def display_optical_flow(folder_path: str, frame_per_ms: int = 10):
 
         # Sets image value according to the optical flow
         # magnitude (normalized)
-        mask[..., 2] = cv.normalize(magnitude, None, 0, 255, cv.NORM_MINMAX)
+        mask[..., 2] = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
 
         # Converts HSV to RGB (BGR) color representation
-        rgb = cv.cvtColor(mask, cv.COLOR_HSV2BGR)
+        rgb = cv2.cvtColor(mask, cv2.COLOR_HSV2BGR)
 
         # Opens a new window and displays the output frame
-        cv.imshow("dense optical flow", rgb)
+        cv2.imshow("dense optical flow", rgb)
 
         # Updates previous frame
         prev_gray = gray
@@ -62,7 +63,7 @@ def display_optical_flow(folder_path: str, frame_per_ms: int = 10):
         # Frames are read by intervals of 1 millisecond. The
         # programs breaks out of the while loop when the
         # user presses the 'q' key
-        if cv.waitKey(frame_per_ms) & 0xFF == ord('q'):
+        if cv2.waitKey(frame_per_ms) & 0xFF == ord('q'):
             break
 
-    cv.destroyAllWindows()
+    cv2.destroyAllWindows()
