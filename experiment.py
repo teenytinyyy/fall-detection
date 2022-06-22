@@ -11,14 +11,14 @@ if __name__ == '__main__':
 
     imgs = np.array(img_utils.read_from_folder(folder_path))
 
-    step = 5
-    diff_list = []
-    for i in range(len(imgs) - step):
-        diff_list.append(motion.diff(imgs[i], imgs[i + step]))
+    # step = 5
+    # diff_list = []
+    # for i in range(0, len(imgs) - step, step):
+    #     diff_list.append(motion.diff(imgs[i], imgs[i + step]))
 
-    length = 5
+    length = 10
     motion_list = []
-    for i in range(len(diff_list) - length):
-        motion_list.append(motion.motion_blur(diff_list[i:i + length]))
+    for i in range(len(imgs) - length):
+        motion_list.append(motion.motion_energy_image(imgs[i:i + length]))
 
     img_utils.play_img_seq(motion_list)

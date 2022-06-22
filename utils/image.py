@@ -29,24 +29,6 @@ def read_from_folder(folder_path: str) -> List[np.ndarray]:
     return img_list
 
 
-def diff(img_a: np.ndarray, img_b: np.ndarray, tolerance: int = 5) -> np.ndarray:
-    diff = np.abs(img_a.astype(np.float32) - img_b.astype(np.float32))  # type: ignore
-    diff[diff < tolerance] = 0
-    return diff.astype(np.uint8)
-
-
-def motion_blur(img_arr: np.ndarray, coefficients: List[float] = []) -> np.ndarray:
-    if not coefficients:
-        coefficients = [1 for _ in range(len(img_arr))]
-
-    for i in range(len(img_arr)):
-        img_arr[i] = img_arr[i].astype(np.uint8) * coefficients[i]
-
-    motion_img = np.sum(img_arr, axis=0) / len(img_arr)
-
-    return motion_img.astype(np.uint8)
-
-
 def resize(img: np.ndarray, new_size: int):
 
     h, w, c = img.shape
