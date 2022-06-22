@@ -1,19 +1,19 @@
 from typing import List
-import cv2
 import numpy as np
+import cv2
 
 
 MAX_INTENSITY = 255
 
 
-def motion_blur(img_arr: List[np.ndarray], coefficients: List[float] = []) -> np.ndarray:
-    if not coefficients:
-        coefficients = [1 for _ in range(len(img_arr))]
+def motion_blur(img_arr: List[np.ndarray], step: int = 5, interval: int = 5, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
 
-    for i in range(len(img_arr)):
-        img_arr[i] = img_arr[i].astype(np.float32) * coefficients[i]
+    diff_list = get_diff_sequence(img_arr, step, interval)
 
-    motion_img = np.sum(img_arr, axis=0) / len(img_arr)
+    for i in range(len(diff_list)):
+        diff_list[i][diff_list[i] > 0] = max_intensity
+
+    motion_img = np.sum(diff_list, axis=0) / len(diff_list)
 
     return motion_img.astype(np.uint8)
 
@@ -77,3 +77,93 @@ def motion_history_image(img_arr: List[np.ndarray], step: int = 5, interval: int
 
 def history_weights(length: int):
     return np.arange(0, 1, 1 / length, dtype=np.float32)
+
+
+def optical_flow(img_arr: List[np.ndarray], max_intensity: int = MAX_INTENSITY) -> List[np.ndarray]:
+
+    first_frame = img_arr[0]
+    prev_gray = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
+
+    mask = np.zeros_like(first_frame)
+
+    # Sets image saturation to maximum
+    mask[..., 1] = max_intensity
+
+    representation_list = []
+
+    for frame in img_arr:
+
+        # Converts each frame to grayscale - we previously
+        # only converted the first frame to grayscale
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # gray = cv2.GaussianBlur(gray, ksize=(3, 3), sigmaX=0)
+
+        # Calculates dense optical flow by Farneback method
+        flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+        # Computes the magnitude and angle of the 2D vectors
+        magnitude, angle = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+
+        # Sets image hue according to the optical flow
+        # direction
+        mask[..., 0] = angle * 180 / np.pi / 2
+
+        # Sets image value according to the optical flow
+        # magnitude (normalized)
+        mask[..., 2] = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
+
+        # Converts HSV to RGB (BGR) color representation
+        rgb = cv2.cvtColor(mask, cv2.COLOR_HSV2BGR)
+
+        representation_list.append(rgb)
+
+        # Updates previous frame
+        prev_gray = gray
+
+    return representation_list
+
+
+def get_dynamic_image(frames: np.ndarray, normalized=True):
+    """ Takes a list of frames and returns either a raw or normalized dynamic image."""
+    num_channels = frames[0].shape[2]
+    channel_frames = _get_channel_frames(frames, num_channels)
+    channel_dynamic_images = [_compute_dynamic_image(channel) for channel in channel_frames]
+
+    dynamic_image = cv2.merge(tuple(channel_dynamic_images))
+    if normalized:
+        dynamic_image = cv2.normalize(dynamic_image, None, 0, 255)
+        dynamic_image = dynamic_image.astype('uint8')
+
+    return dynamic_image
+
+
+def _get_channel_frames(iter_frames, num_channels):
+    """ Takes a list of frames and returns a list of frame lists split by channel. """
+    frames = [[] for _ in range(num_channels)]
+
+    for frame in iter_frames:
+        for channel_frames, channel in zip(frames, cv2.split(frame)):
+            channel_frames.append(channel.reshape((*channel.shape[0:2], 1)))
+
+    for i in range(len(frames)):
+        frames[i] = np.array(frames[i])  # type: ignore
+
+    return frames
+
+
+def _compute_dynamic_image(frames):
+    """ Adapted from https://github.com/hbilen/dynamic-image-nets """
+    num_frames, h, w, depth = frames.shape
+
+    # Compute the coefficients for the frames.
+    coefficients = np.zeros(num_frames)
+    for n in range(num_frames):
+        cumulative_indices = np.array(range(n, num_frames)) + 1
+        coefficients[n] = np.sum(((2 * cumulative_indices) - num_frames) / cumulative_indices)
+
+    # Multiply by the frames by the coefficients and sum the result.
+    x1 = np.expand_dims(frames, axis=0)
+    x2 = np.reshape(coefficients, (num_frames, 1, 1, 1))
+    result = x1 * x2
+    return np.sum(result[0], axis=0).squeeze()

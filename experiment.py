@@ -9,16 +9,18 @@ if __name__ == '__main__':
 
     # optical_flow.display_optical_flow(folder_path)
 
-    imgs = np.array(img_utils.read_from_folder(folder_path))
+    imgs = img_utils.read_from_folder(folder_path)
 
     # step = 5
     # diff_list = []
     # for i in range(0, len(imgs) - step, step):
     #     diff_list.append(motion.diff(imgs[i], imgs[i + step]))
 
-    length = 50
+    length = 75
     motion_list = []
-    for i in range(len(imgs) - length):
-        motion_list.append(motion.motion_history_image(imgs[i:i + length]))
+    # for i in range(len(imgs) - length):
+    #     motion_list.append(motion.motion_blur(imgs[i:i + length]))
+
+    motion_list = motion.optical_flow(imgs)
 
     img_utils.play_img_seq(motion_list, 30)
