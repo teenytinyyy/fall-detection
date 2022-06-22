@@ -16,9 +16,9 @@ if __name__ == '__main__':
     # for i in range(0, len(imgs) - step, step):
     #     diff_list.append(motion.diff(imgs[i], imgs[i + step]))
 
-    length = 30
+    length = 50
     motion_list = []
     for i in range(len(imgs) - length):
-        motion_list.append(motion.motion_energy_image(imgs[i:i + length]))
+        motion_list.append(motion.motion_history_image(imgs[i:i + length]))
 
-    img_utils.play_img_seq(motion_list)
+    img_utils.play_img_seq(motion_list, 30)
