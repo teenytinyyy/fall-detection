@@ -2,6 +2,9 @@ from typing import List
 import numpy as np
 
 
+MAX_INTENSITY = 255
+
+
 def motion_blur(img_arr: List[np.ndarray], coefficients: List[float] = []) -> np.ndarray:
     if not coefficients:
         coefficients = [1 for _ in range(len(img_arr))]
@@ -14,7 +17,7 @@ def motion_blur(img_arr: List[np.ndarray], coefficients: List[float] = []) -> np
     return motion_img.astype(np.uint8)
 
 
-def diff(img_a: np.ndarray, img_b: np.ndarray, thres: float = 0.2, max_intensity: int = 255) -> np.ndarray:
+def diff(img_a: np.ndarray, img_b: np.ndarray, thres: float = 0.2, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
     diff = abs(img_a.astype(np.float32) - img_b.astype(np.float32))  # type: ignore
 
     diff[diff < max_intensity * thres] = 0
@@ -22,23 +25,49 @@ def diff(img_a: np.ndarray, img_b: np.ndarray, thres: float = 0.2, max_intensity
     return diff.astype(np.uint8)
 
 
-def binary_cumulation(binary_img_arr: List[np.ndarray]) -> np.ndarray:
+def get_diff_sequence(img_arr: List[np.ndarray], step: int = 1, interval: int = 5) -> List[np.ndarray]:
+
+    diff_list = []
+
+    for i in range(0, len(img_arr) - interval, step):
+        diff_list.append(diff(img_arr[i], img_arr[i + interval]))
+
+    return diff_list
+
+
+def binary_cumulation(binary_img_arr: List[np.ndarray], weights: List[float] = [], max_intensity: int = MAX_INTENSITY) -> np.ndarray:
+
+    if len(weights) == 0:
+        weights = [1 for _ in range(len(binary_img_arr))]
 
     cumulation_img = np.zeros_like(binary_img_arr[0])
 
-    for img in binary_img_arr:
-        cumulation_img = np.logical_or(cumulation_img, img)
+    for img, w in zip(binary_img_arr, weights):
+        img[img > 0] = max_intensity
+        cumulation_img = np.maximum(cumulation_img, img * w)
 
     return cumulation_img
 
 
-def motion_energy_image(img_arr: np.ndarray) -> np.ndarray:
-    diff_list = []
-    for i in range(1, len(img_arr)):
-        diff_list.append(diff(img_arr[i], img_arr[i - 1]))
+def motion_energy_image(img_arr: List[np.ndarray], step: int = 5, interval: int = 5, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
+    diff_list = get_diff_sequence(img_arr, step, interval)
 
     mei = binary_cumulation(diff_list).astype(np.uint8)
 
-    mei[mei > 0] = 255
+    mei[mei > 0] = max_intensity
 
     return mei
+
+
+def motion_history_image(img_arr: List[np.ndarray], step: int = 5, interval: int = 5) -> np.ndarray:
+    diff_list = get_diff_sequence(img_arr, step, interval)
+
+    weights = history_weights(len(diff_list))
+
+    mei = binary_cumulation(diff_list, weights).astype(np.uint8)
+
+    return mei
+
+
+def history_weights(length: int):
+    return np.arange(0, 1, 1 / length, dtype=np.float32)

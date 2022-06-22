@@ -16,7 +16,7 @@ if __name__ == '__main__':
     # for i in range(0, len(imgs) - step, step):
     #     diff_list.append(motion.diff(imgs[i], imgs[i + step]))
 
-    length = 10
+    length = 30
     motion_list = []
     for i in range(len(imgs) - length):
         motion_list.append(motion.motion_energy_image(imgs[i:i + length]))
