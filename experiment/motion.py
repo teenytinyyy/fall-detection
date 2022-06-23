@@ -67,7 +67,9 @@ def history_weights(length: int):
     return np.arange(0, 1, 1 / length, dtype=np.float32)
 
 
-def optical_flow(img_arr: List[np.ndarray], max_intensity: int = MAX_INTENSITY) -> List[np.ndarray]:
+def optical_flow(img_arr: List[np.ndarray], step: int = 1, interval: int = 1, max_intensity: int = MAX_INTENSITY) -> List[np.ndarray]:
+
+    img_arr = get_diff_sequence(img_arr, step, interval)
 
     first_frame = img_arr[0]
     prev_gray = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
