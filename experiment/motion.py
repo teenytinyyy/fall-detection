@@ -6,7 +6,7 @@ import cv2
 MAX_INTENSITY = 255
 
 
-def motion_blur(img_arr: List[np.ndarray], step: int = 5, interval: int = 5, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
+def motion_blur(img_arr: List[np.ndarray], step: int = 10, interval: int = 10, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
 
     diff_list = get_diff_sequence(img_arr, step, interval)
 
@@ -36,31 +36,19 @@ def get_diff_sequence(img_arr: List[np.ndarray], step: int = 1, interval: int = 
     return diff_list
 
 
-def binary_cumulation(binary_img_arr: List[np.ndarray], weights: List[float] = [], max_intensity: int = MAX_INTENSITY) -> np.ndarray:
+def motion_energy_image(img_arr: List[np.ndarray], step: int = 10, interval: int = 10, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
+    diff_list = get_diff_sequence(img_arr, step, interval)
 
-    if len(weights) == 0:
-        weights = [1 for _ in range(len(binary_img_arr))]
+    cumulation_img = np.zeros_like(diff_list[0])
 
-    cumulation_img = np.zeros_like(binary_img_arr[0])
-
-    for img, w in zip(binary_img_arr, weights):
+    for img in diff_list:
         img[img > 0] = max_intensity
-        cumulation_img = np.maximum(cumulation_img, img * w)
+        cumulation_img = np.maximum(cumulation_img, img)
 
     return cumulation_img
 
 
-def motion_energy_image(img_arr: List[np.ndarray], step: int = 5, interval: int = 5, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
-    diff_list = get_diff_sequence(img_arr, step, interval)
-
-    mei = binary_cumulation(diff_list).astype(np.uint8)
-
-    mei[mei > 0] = max_intensity
-
-    return mei
-
-
-def motion_history_image(img_arr: List[np.ndarray], step: int = 5, interval: int = 5, background_decay: int = 20, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
+def motion_history_image(img_arr: List[np.ndarray], step: int = 10, interval: int = 10, background_decay: int = 20, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
     diff_list = get_diff_sequence(img_arr, step, interval)
 
     decay_intensities = history_weights(len(diff_list)) * max_intensity
@@ -124,7 +112,7 @@ def optical_flow(img_arr: List[np.ndarray], max_intensity: int = MAX_INTENSITY) 
     return representation_list
 
 
-def get_dynamic_image(frames: np.ndarray, normalized=True):
+def get_dynamic_image(frames: List[np.ndarray], normalized=True):
     """ Takes a list of frames and returns either a raw or normalized dynamic image."""
     num_channels = frames[0].shape[2]
     channel_frames = _get_channel_frames(frames, num_channels)
