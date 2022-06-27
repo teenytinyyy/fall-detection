@@ -6,7 +6,7 @@ from utils import image as img_utils
 
 if __name__ == '__main__':
 
-    folder_path = "dataset/data_151_221/data (151)"
+    folder_path = "dataset/data_1_1"
 
     imgs = img_utils.read_from_folder(folder_path)
 
