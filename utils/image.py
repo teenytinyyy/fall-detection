@@ -54,10 +54,10 @@ def play_img_seq(img_list: List[np.ndarray], frame_per_ms: int = 10) -> None:
     cv2.destroyAllWindows()
 
 
-def write_img_seq(img_list: List[np.ndarray], frame_per_ms: int = 10) -> None:
+def write_img_seq(img_list: List[np.ndarray], dir: str) -> None:
 
     for idx, frame in enumerate(img_list):
 
         print("processing image {}/{}".format(idx, len(img_list)))
 
-        cv2.imwrite("img_seq_{}.jpg".format(idx), frame)
+        cv2.imwrite("{}/img_seq_{}.jpg".format(dir, idx), frame)
