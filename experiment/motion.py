@@ -6,18 +6,6 @@ import cv2
 MAX_INTENSITY = 255
 
 
-def motion_blur(img_arr: List[np.ndarray], step: int = 10, interval: int = 10, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
-
-    diff_list = get_diff_sequence(img_arr, step, interval)
-
-    for i in range(len(diff_list)):
-        diff_list[i][diff_list[i] > 0] = max_intensity
-
-    motion_img = np.sum(diff_list, axis=0) / len(diff_list)
-
-    return motion_img.astype(np.uint8)
-
-
 def diff(img_a: np.ndarray, img_b: np.ndarray, thres: float = 0.2, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
     diff = abs(img_a.astype(np.float32) - img_b.astype(np.float32))  # type: ignore
 
@@ -34,6 +22,18 @@ def get_diff_sequence(img_arr: List[np.ndarray], step: int = 1, interval: int = 
         diff_list.append(diff(img_arr[i], img_arr[i + interval]))
 
     return diff_list
+
+
+def motion_blur(img_arr: List[np.ndarray], step: int = 10, interval: int = 10, max_intensity: int = MAX_INTENSITY) -> np.ndarray:
+
+    diff_list = get_diff_sequence(img_arr, step, interval)
+
+    for i in range(len(diff_list)):
+        diff_list[i][diff_list[i] > 0] = max_intensity
+
+    motion_img = np.sum(diff_list, axis=0) / len(diff_list)
+
+    return motion_img.astype(np.uint8)
 
 
 def motion_energy_image(img_arr: List[np.ndarray], step: int = 10, interval: int = 10, max_intensity: int = MAX_INTENSITY) -> np.ndarray:

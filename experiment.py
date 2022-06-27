@@ -25,10 +25,10 @@ if __name__ == '__main__':
     #     motion_list.append(motion.motion_energy_image(imgs[i:i + length]))
 
     # XXX display MHI
-    # for i in range(len(imgs) - length):
-    #     motion_list.append(motion.motion_history_image(imgs[i:i + length]))
+    for i in range(len(imgs) - length):
+        motion_list.append(motion.motion_history_image(imgs[i:i + length]))
 
     # XXX display optical flow
-    motion_list = motion.optical_flow(imgs)
+    # motion_list = motion.optical_flow(imgs)
 
     img_utils.play_img_seq(motion_list, 30)
