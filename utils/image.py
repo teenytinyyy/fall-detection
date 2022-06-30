@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from natsort import natsorted
 import cv2
 import glob
@@ -61,3 +61,32 @@ def write_img_seq(img_list: List[np.ndarray], dir: str) -> None:
         print("processing image {}/{}".format(idx, len(img_list)))
 
         cv2.imwrite("{}/img_seq_{}.jpg".format(dir, idx), frame)
+
+
+def draw_dot(img, x, y, radius=2, color=(0, 0, 255)):
+    cv2.circle(img, (int(x), int(y)), radius=radius, color=color, thickness=-1)
+
+
+def add_text(img, text, x, y):
+    cv2.putText(img, text=text, org=(int(x), int(y)), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=(0, 255, 255), lineType=cv2.LINE_AA)
+
+
+def display_bbox(img, x, y, w, h, output_path: Optional[str] = None, ratio_mode: bool = True):
+
+    if ratio_mode:
+        img_height, img_width, _ = img.shape
+        rect_start = (int((float(x) - float(w) / 2) * img_width), int((float(y) - float(h) / 2) * img_height))
+        rect_end = (int((float(x) + float(w) / 2) * img_width), int((float(y) + float(h) / 2) * img_height))
+    else:
+        rect_start = (int(float(x) - float(w) / 2), int(float(y) - float(h) / 2))
+        rect_end = (int(float(x) + float(w) / 2), int(float(y) + float(h) / 2))
+
+    cv2.rectangle(img, rect_start, rect_end, (0, 0, 255), 1)
+
+    if output_path is None:
+        cv2.imshow('img', img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    else:
+        cv2.imwrite(output_path, img)
