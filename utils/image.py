@@ -13,7 +13,7 @@ def batch_read_img(file_name: str):
 
 
 def read_from_folder(folder_path: str) -> List[np.ndarray]:
-    img_path_list = file_utils.get_files(folder_path)
+    img_path_list = file_utils.get_files(folder_path, [".jpg", ".png", ".jpeg"])
     img_list = []
 
     def filename_key(x: str):

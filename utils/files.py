@@ -8,7 +8,7 @@ from pathlib import Path
 from os import listdir
 from os.path import isfile
 from os.path import join
-from typing import List
+from typing import List, Optional
 
 
 def get_extension(file_path: str):
@@ -27,8 +27,31 @@ def get_local_file(filename):
     return os.path.join(sys.path[0], filename)
 
 
-def get_files(folder_path):
-    return [join(folder_path, f) for f in listdir(folder_path) if isfile(join(folder_path, f))]
+def get_files(folder_path, ext: List[str] = []):
+    files = []
+
+    for f in listdir(folder_path):
+        _, file_ext = get_extension(os.path.basename(f))
+        if ext and file_ext not in ext:
+            continue
+
+        files.append(join(folder_path, f))
+
+    return files
+
+
+def get_sorted_files(folder_path, ext: List[str] = []):
+
+    path_list = get_files(folder_path, ext)
+
+    def filename_key(x: str):
+        filename, _ = get_extension(get_filename(x))
+        filename = filename.zfill(4)
+        return filename
+
+    path_list.sort(key=filename_key)
+
+    return path_list
 
 
 def get_folders(dir: str):
