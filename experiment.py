@@ -2,15 +2,19 @@ import cv2
 import numpy as np
 from experiment import motion
 from utils import image as img_utils
+import os
 
 
 if __name__ == '__main__':
 
-    folder_path = "dataset/data_1_1"
+    folder_path = "dataset/data/FDD_data_picture/data (1_1)"
+    output_path = "dataset/data/MHI/data (1_1)"
+    if not os.path.isdir(output_path):
+                os.makedirs(output_path)
 
     imgs = img_utils.read_from_folder(folder_path)
 
-    length = 75
+    length = 21
     motion_list = []
 
     # XXX display input video
@@ -31,4 +35,4 @@ if __name__ == '__main__':
     # XXX display optical flow
     # motion_list = motion.optical_flow(imgs)
 
-    img_utils.play_img_seq(motion_list, 30)
+    img_utils.write_img_seq(motion_list, output_path)
