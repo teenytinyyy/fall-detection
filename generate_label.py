@@ -8,7 +8,8 @@ from utils import files as file_utils
 
 
 if __name__ == '__main__':
-    data_dir = "dataset/json_data (1_1)"
+    data_dir = "./dataset/data/json/json_data (1)"
+    
     json_files = file_utils.get_sorted_files(data_dir, ext=[".json"])
 
     json_data_list = []
@@ -40,8 +41,8 @@ if __name__ == '__main__':
             img_utils.draw_dot(frame, point[1], point[0], radius=2, color=(255, 255, 0))
 
         cv2.ellipse(frame, (center[1], center[0]), (int(height), int(width)), -angle, 0, 360, (255, 255, 0), 1)
-
-        cv2.imshow("image sequence", frame)
+        
+        cv2.imwrite("./dataset/data/json/json_data (1)/{}.jpg".format(idx), frame)
 
         if cv2.waitKey(30) & 0xFF == ord('q'):
             break
