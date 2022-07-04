@@ -23,7 +23,7 @@ setup_logger()
 if __name__ == "__main__":
 
     # for num in range(1, 2):
-    for num1 in range(2, 3):
+    for num1 in range(1, 222):
         checkpoint_threshold = 0.6
         histogram_thresh = 0.3  # 20%閥值
         test_mode = False
@@ -108,8 +108,9 @@ if __name__ == "__main__":
         print("images#:", len(images))
         for idx, frame in enumerate(images):
             outputs = predictor(frame)
-
+            polygons_areas = {}
             predictions = []
+
             for single_prediction in outputs:
                 # Transfer relevant data to cpu
                 single_prediction = outputs
@@ -143,8 +144,13 @@ if __name__ == "__main__":
                 # print(count)
 
                 polygons = Mask(array).polygons()
-                polygons_points = np.array(polygons.points[0])
-                points = np.array([[point[1], point[0]] for point in polygons.points[0]])
+                polygons_points = np.array(polygons.points)
+                #print(len(polygons_points))
+                for i in range(len(polygons_points)):
+                    polygons_areas[i] = cv2.contourArea(polygons_points[i])
+                max_idx = max(polygons_areas, key = polygons_areas.get)
+                #print("area", c, polygons_areas, max_idx)
+                points = np.array([[point[1], point[0]] for point in polygons_points[max_idx]])
                 angle_1, width_1, height_1, center_1 = label_utils.ellipse_bbox(points)
                 m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
                 # binarizedImage = (predictions[0]["pred_masks"][0]  > 126) * 255
@@ -181,7 +187,7 @@ if __name__ == "__main__":
                 # cv2.rectangle(frame, (h_x1, new_m_y1),
                 #                (h_x2, m_y2), (0, 255, 0), 4)
                 cv2.rectangle(frame, (m_x1, m_y1), (m_x2, m_y2), (0, 255, 0), 3)
-                cv2.polylines(frame, pts = [polygons_points], isClosed = True, color = (0, 0, 255), thickness = 3)
+                cv2.polylines(frame, pts = [polygons_points[max_idx]], isClosed = True, color = (0, 0, 255), thickness = 3)
                 cv2.ellipse(frame, (int(center_1[1]), int(center_1[0])), (int(height_1), int(width_1)), int(-angle_1), 0, 360, (255, 0, 0), 2)
                 cv2.rectangle(frame, (m_x1_p1, m_y1_p1), (m_x2_p1, m_y2_p1), (0, 0, 255), 2)
                 frame = Mask(array).draw(frame, color=(255, 0, 255), alpha=0.5)
@@ -377,8 +383,8 @@ if __name__ == "__main__":
                 else:
                     cv2.imwrite(output_path + "%d.jpg" % (c), frame)
 
-            c = c + 1
             # print("c:",c)
+            c = c + 1
             end = time.time()
             # print("執行時間：%f 秒" % (end - start))
             # out.write(result)
