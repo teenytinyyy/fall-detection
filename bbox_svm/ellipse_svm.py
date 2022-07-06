@@ -90,7 +90,7 @@ if __name__ == "__main__":
     video_start = 1
     video_end = 221
     target_range = 13
-    threshold = 0.6
+    threshold = 0.5
     avg_range = 13
     angle_list = []
     ar = []
@@ -131,7 +131,7 @@ if __name__ == "__main__":
             unused_num.append(int(row[0]))
 
     for num in range(video_start, video_end + 1):
-        file_path = "../dataset/data/excel/2cam/data (" + str(num) + ").csv"
+        file_path = "../dataset/data/excel/ellipse/data (" + str(num) + ").csv"
         # file = open(file_name, newline='')  with用完會幫你關，單用open 要自己關
         # rows = csv.reader(file)
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
             ang_v_list = get_diff_list(box_angle)
             ang_a_list = get_diff_list(ang_v_list)
-            avg_list = get_abs_avg_list(ang_a_list, avg_range)
+            avg_list = get_avg_list(ang_a_list, avg_range)
 
             radius = 30
             frame_idx = 30
@@ -170,10 +170,15 @@ if __name__ == "__main__":
                             max(ar[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
-
+                        ar_data.append(
+                            max(box_angle[frame_idx - radius:frame_idx + radius]))
+                        ar_data.append(
+                            min(box_angle[frame_idx - radius:frame_idx + radius]))
+                        print(max(box_angle[frame_idx - radius:frame_idx + radius]))
+                        print(min(box_angle[frame_idx - radius:frame_idx + radius]))
+                            
                         fall_data.append(ar_data)
-                        sec_fall_data.append(sec_data)
-                        N3_fall_data.append(N3_data)
+
 
                         if (frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius):
                             fall_target.append(1)
@@ -195,8 +200,7 @@ if __name__ == "__main__":
                     count += 1
                     frame_idx += 1
                     ar_data = []
-                    sec_data = []
-                    N3_data = []
+
                     continue
 
                 frame_idx += 1
@@ -214,6 +218,7 @@ if __name__ == "__main__":
             y_top_a = []
 
     print(len(fall_target))
+    print(sum(fall_target))
     print(count)
 
     X_1 = np.array(fall_data)

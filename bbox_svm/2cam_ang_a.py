@@ -175,7 +175,7 @@ if __name__ == "__main__":
                         ar_data.append(
                             max(avg_list[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
-                           min(avg_list[frame_idx - radius:frame_idx + radius]))
+                            min(avg_list[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             max(ar[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
@@ -185,21 +185,21 @@ if __name__ == "__main__":
                             max(ar[frame_idx - radius:frame_idx + radius]))
                         sec_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
-                        # sec_data.append(
-                        #     max(y_top_avg[frame_idx - radius:frame_idx + radius]))
+                        sec_data.append(
+                            max(y_top_avg[frame_idx - radius:frame_idx + radius]))
                         sec_data.append(
                             min(y_top_avg[frame_idx - radius:frame_idx + radius]))
-                        # sec_data.append(
-                        #    max(avg_list[frame_idx - radius:frame_idx + radius]))
+                        sec_data.append(
+                            max(avg_list[frame_idx - radius:frame_idx + radius]))
 
                         N3_data.append(
                             min(y_top_avg[frame_idx - radius:frame_idx + radius]))
                         N3_data.append(
                             max(avg_list[frame_idx - radius:frame_idx + radius]))
-                        #N3_data.append(
-                        #    max(ar[frame_idx - radius:frame_idx + radius]))
-                        #N3_data.append(
-                        #    min(ar[frame_idx - radius:frame_idx + radius]))
+                        N3_data.append(
+                            max(ar[frame_idx - radius:frame_idx + radius]))
+                        N3_data.append(
+                            min(ar[frame_idx - radius:frame_idx + radius]))
 
                         fall_data.append(ar_data)
                         sec_fall_data.append(sec_data)
@@ -246,6 +246,7 @@ if __name__ == "__main__":
 
     print(len(fall_target))
     print(count)
+    print(sum(fall_target))
 
     X_1 = np.array(fall_data)
     Y = np.array(fall_target)
