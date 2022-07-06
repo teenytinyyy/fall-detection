@@ -140,4 +140,8 @@ def ellipse_bbox(points: np.ndarray):
 
     center = [int(pos) for pos in center]
 
+    if height > width:
+        angle = 90 - angle
+        width, height = height, width
+
     return (angle, width / 2, height / 2, center)
