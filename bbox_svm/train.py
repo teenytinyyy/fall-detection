@@ -129,20 +129,12 @@ CLASS_NAMES =[
 #tensorboard
 
 DATASET_ROOT = './coco/images/'
-#DATASET_ROOT = '/home/ian/code/coco/'
 ANN_ROOT = os.path.join(DATASET_ROOT, 'COCOformat')
-#ANN_ROOT = os.path.join(DATASET_ROOT, 'annotations')
 
 TRAIN_PATH = os.path.join(DATASET_ROOT, 'JPEGImages')
 VAL_PATH = os.path.join(DATASET_ROOT, 'JPEGImages')
-# TRAIN_PATH = os.path.join(DATASET_ROOT, 'train2017')
-# VAL_PATH = os.path.join(DATASET_ROOT, 'val2017')
-#TRAIN_JSON = os.path.join(ANN_ROOT, 'panoptic_train2017.json')
 TRAIN_JSON = os.path.join(ANN_ROOT, 'instances_train2017.json')
-#TRAIN_JSON = os.path.join(ANN_ROOT, 'instances_train2017_person.json')
-#VAL_JSON = os.path.join(ANN_ROOT, 'panoptic_val2017.json')
 VAL_JSON = os.path.join(ANN_ROOT, 'instances_val2017.json')
-#VAL_JSON = os.path.join(ANN_ROOT, 'instances_val2017_person.json')
 # 声明数据集的子集
 PREDEFINED_SPLITS_DATASET = {
     "final_train_coco_888": (TRAIN_PATH, TRAIN_JSON),
@@ -172,6 +164,10 @@ def register_dataset_instances(name, json_file, image_root):
     MetadataCatalog.get(name).set(json_file=json_file,
                                   image_root=image_root,
                                   evaluator_type="coco")
+
+
+def load_dataset():
+    return load_coco_json()
 
 #=============================
 # 注册数据集和元数据
