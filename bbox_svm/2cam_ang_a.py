@@ -95,6 +95,7 @@ if __name__ == "__main__":
     angle_list = []
     ar = []
     ar_data = []
+    last_frame_ar = []
     box_top_center_x = []
     box_top_center_y = []
     box_bottom_right_x = []
@@ -114,6 +115,7 @@ if __name__ == "__main__":
     y_dis_list = []
     idx = 0
     count = 0
+    count_2 = 0
     count_unused = 0
     rev_idx = {}
 
@@ -181,36 +183,34 @@ if __name__ == "__main__":
                         ar_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
 
-                        sec_data.append(
-                            max(ar[frame_idx - radius:frame_idx + radius]))
-                        sec_data.append(
-                            min(ar[frame_idx - radius:frame_idx + radius]))
-                        sec_data.append(
-                            max(y_top_avg[frame_idx - radius:frame_idx + radius]))
-                        sec_data.append(
-                            min(y_top_avg[frame_idx - radius:frame_idx + radius]))
-                        sec_data.append(
-                            max(avg_list[frame_idx - radius:frame_idx + radius]))
+                        last_frame_ar.append(ar[frame_idx + radius])
 
-                        N3_data.append(
-                            min(y_top_avg[frame_idx - radius:frame_idx + radius]))
-                        N3_data.append(
-                            max(avg_list[frame_idx - radius:frame_idx + radius]))
-                        N3_data.append(
-                            max(ar[frame_idx - radius:frame_idx + radius]))
-                        N3_data.append(
-                            min(ar[frame_idx - radius:frame_idx + radius]))
 
                         fall_data.append(ar_data)
-                        sec_fall_data.append(sec_data)
-                        N3_fall_data.append(N3_data)
+
+
+                        # if last_frame_ar[-1] > 1:
+                        #     fall_target.append(0)
+                        #     frame_idx += radius
+                        #     print("video:", num)
+                        #     print("picture:", frame_idx)
+                        #     print("label:", 0)
 
                         if (frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius):
-                            fall_target.append(1)
-                            print("video:", num)
-                            print("picture:", frame_idx)
-                            print("label:", 1)
+                            if last_frame_ar[-1] > 1:
+                                fall_target.append(2)
+                                print("video:", num)
+                                print("picture:", frame_idx)
+                                print("label:", 0)                                
+                                print(last_frame_ar[-1])
+                                count_2 += 1
 
+                            else:                                
+                                fall_target.append(1)
+                                print("video:", num)
+                                print("picture:", frame_idx)
+                                print("label:", 1)
+                            
                             frame_idx += radius
                         else:
                             fall_target.append(0)
@@ -225,9 +225,9 @@ if __name__ == "__main__":
                     count += 1
                     frame_idx += 1
                     ar_data = []
-                    sec_data = []
-                    N3_data = []
+
                     continue
+
 
                 frame_idx += 1
 
@@ -244,18 +244,18 @@ if __name__ == "__main__":
             y_top_v = []
             y_top_a = []
 
-    print(len(fall_target))
-    print(count)
-    print(sum(fall_target))
+    print("all_target", len(fall_target))
+    print("thres", count)
+    print("fall", sum(fall_target))
+    print("count_2", count_2)
 
     X_1 = np.array(fall_data)
     Y = np.array(fall_target)
-    X_2 = np.array(sec_fall_data)
-    X_3 = np.array(N3_fall_data)
+
 
     test_svm_classify(X_1, Y, rev_idx, 0.7)
-    test_svm_classify(X_2, Y, rev_idx, 0.7)
-    test_svm_classify(X_3, Y, rev_idx, 0.7)
+    
+
 
 '''
     random_idx = random_indices(0, len(X_1))

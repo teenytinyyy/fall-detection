@@ -1,6 +1,7 @@
 # coding=utf-8
 
 # 加载一些基础包以及设置logger
+from re import T
 from sklearn.svm import SVC, LinearSVC
 from natsort import natsorted
 import joblib
@@ -16,6 +17,7 @@ import csv
 import math
 import glob
 import label as label_utils
+import image as image
 
 
 setup_logger()
@@ -47,7 +49,8 @@ if __name__ == "__main__":
         images = [
             cv2.imread(file)
             for file in natsorted(
-                glob.glob("../dataset/data/FDD_data_picture/" + video_name + "/*.jpg")
+                glob.glob("../dataset/data/FDD_data_picture/" +
+                          video_name + "/*.jpg")
             )
         ]
 
@@ -84,6 +87,7 @@ if __name__ == "__main__":
         ellipse_width = []
         ellipse_height = []
         ellipse_angle = []
+        img_list = []
 
         c = 0
         count = -1
@@ -109,13 +113,16 @@ if __name__ == "__main__":
         for idx, frame in enumerate(images):
             outputs = predictor(frame)
             polygons_areas = {}
+            polygons_areas_1 = {}
             predictions = []
 
             for single_prediction in outputs:
                 # Transfer relevant data to cpu
                 single_prediction = outputs
                 # print(single_prediction)
-                single_prediction_cpu = single_prediction["instances"].to("cpu")._fields
+                single_prediction_cpu = single_prediction["instances"].to(
+                    "cpu")._fields
+
             person_selection_mask = single_prediction_cpu["pred_classes"] == 0
             box_selection_mask = person_selection_mask
             predictions.append(
@@ -134,25 +141,24 @@ if __name__ == "__main__":
 
             if len(predictions[0]["pred_masks"]) != 0:  # 防呆 is not
                 # 第一個人的MASK拿出來，只測一人
-                array = predictions[0]["pred_masks"][0]
+                mask = predictions[0]["pred_masks"][0]
                 if len(predictions[0]["pred_masks"]) >= 2:
                     array_p1 = predictions[0]["pred_masks"][1]
                     polygons_p1 = Mask(array_p1).polygons()
                     m_x1_p1, m_y1_p1, m_x2_p1, m_y2_p1 = polygons_p1.bbox()
 
                 count += 1
-                # print(count)
 
-                polygons = Mask(array).polygons()
+                # angle_1, width_1, height_1, center_1 = label_utils.mask2ellipse(mask, polygons_areas)
+                polygons = Mask(mask).polygons()
                 polygons_points = np.array(polygons.points)
-                #print(len(polygons_points))
                 for i in range(len(polygons_points)):
                     polygons_areas[i] = cv2.contourArea(polygons_points[i])
                 max_idx = max(polygons_areas, key = polygons_areas.get)
-                #print("area", c, polygons_areas, max_idx)
                 points = np.array([[point[1], point[0]] for point in polygons_points[max_idx]])
                 angle_1, width_1, height_1, center_1 = label_utils.ellipse_bbox(points)
-                m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
+
+                # m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
                 # binarizedImage = (predictions[0]["pred_masks"][0]  > 126) * 255
                 binarizedImage = predictions[0]["pred_masks"][0]
                 horizontal_projection = np.sum(binarizedImage, axis=0)
@@ -161,36 +167,40 @@ if __name__ == "__main__":
                 # print(y1_max)
                 for i in range(len(horizontal_projection)):
                     if horizontal_projection[i] >= thresh_:
-                        # print(horizontal_projection[i],i)
-                        h_x1 = i
+                        print(i)
+                        binarizedImage[1][0:i] = False
                         break
                 for j in range(len(horizontal_projection) - 1, 0, -1):
                     if horizontal_projection[j] >= thresh_:
-                        # print(horizontal_projection[j],j)
-                        h_x2 = j
+                        print(j)
+                        binarizedImage[1][j: -1] = False
                         break
-                box_r_ori = (m_y2 - m_y1) / (h_x2 - h_x1)
-                if box_r_ori <= 1:  # 斜躺才修正
+                # angle_2, width_2, height_2, center_2 = label_utils.mask2ellipse(binarizedImage)
 
-                    new_m_y1 = m_y2 - y1_max
-                else:
-                    new_m_y1 = m_y1
-                #  if h_thresh:
+                polygons_1 = Mask(binarizedImage).polygons()
+                polygons_points_1 = np.array(polygons_1.points)
+                for i in range(len(polygons_points_1)):
+                    polygons_areas_1[i] = cv2.contourArea(polygons_points_1[i])
+                max_idx_1 = max(polygons_areas_1, key = polygons_areas_1.get)
+                points_1 = np.array([[point_1[1], point_1[0]] for point_1 in polygons_points_1[max_idx_1]])
+                angle_2, width_2, height_2, center_2 = label_utils.ellipse_bbox(points_1)
 
-                #      new_m_y1 =  m_y2 - y1_max
-                #  else:
-                #      new_m_y1 =  m_y1
-
-                m_cX = int((h_x1 + h_x2) / 2.0)
-                m_cY = int((new_m_y1 + m_y2) / 2.0)
                 # cv2.circle(frame, (m_cX, m_cY), 4, (0, 255, 0), -1)
                 # cv2.rectangle(frame, (h_x1, new_m_y1),
                 #                (h_x2, m_y2), (0, 255, 0), 4)
-                cv2.rectangle(frame, (m_x1, m_y1), (m_x2, m_y2), (0, 255, 0), 3)
-                cv2.polylines(frame, pts = [polygons_points[max_idx]], isClosed = True, color = (0, 0, 255), thickness = 3)
-                cv2.ellipse(frame, (int(center_1[1]), int(center_1[0])), (int(height_1), int(width_1)), int(-angle_1), 0, 360, (255, 0, 0), 2)
-                cv2.rectangle(frame, (m_x1_p1, m_y1_p1), (m_x2_p1, m_y2_p1), (0, 0, 255), 2)
-                frame = Mask(array).draw(frame, color=(255, 0, 255), alpha=0.5)
+                # cv2.rectangle(frame, (m_x1, m_y1),
+                #               (m_x2, m_y2), (0, 255, 0), 3)
+                cv2.polylines(frame, pts=[polygons_points[max_idx]], isClosed=True, color=(
+                    0, 0, 255), thickness=3)
+                cv2.polylines(frame, pts=[polygons_points_1[max_idx_1]], isClosed=True, color=(
+                    0, 255, 255), thickness=3)
+                cv2.ellipse(frame, (int(center_1[1]), int(center_1[0])), (int(
+                    height_1), int(width_1)), int(-angle_1), 0, 360, (255, 0, 0), 4)
+                cv2.ellipse(frame, (int(center_2[1]), int(center_2[0])), (int(
+                    height_2), int(width_2)), int(-angle_2), 0, 360, (255, 255, 0), 2)
+                # cv2.rectangle(frame, (m_x1_p1, m_y1_p1),
+                #               (m_x2_p1, m_y2_p1), (0, 0, 255), 2)
+                frame = Mask(mask).draw(frame, color=(255, 0, 255), alpha=0.5)
 
             bbox = predictions[0]["pred_boxes"]
 
@@ -228,17 +238,22 @@ if __name__ == "__main__":
 
             # Calculate start
             if len(predictions[0]["pred_masks"]) != 0:
-                box_center_x.append(m_cX)
-                box_center_y.append(m_cY)
-                ellipse_width.append(width_1)
-                ellipse_height.append(height_1)
-                ellipse_angle.append(angle_1)
+                if height_1 > width_1:
+                    angle_1 = 90 - angle_1
+                    width_1, height_1 = height_1, width_1
+                box_center_x.append(width_1)
+                box_center_y.append(height_1)
+                ellipse_width.append(width_2)
+                ellipse_height.append(height_2)
+                ellipse_angle.append(angle_2)
                 # ellipse_height.append((m_x2,m_y2))
                 frame_num.append(c)
                 if width_1 == 0 or height_1 == 0:
                     bbox_r.append(0)
-                else:
+                elif angle_1 > 45:
                     bbox_r.append(height_1 / width_1)
+                else:
+                    bbox_r.append(width_1 / height_1)
                 # bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
                 # print(bbox_r)
                 # print(box_center_x)
@@ -251,8 +266,10 @@ if __name__ == "__main__":
 
                     box_center_dis = eucliDist(
                         (
-                            box_center_x[count - video_frame * 2] / frame_width,
-                            box_center_y[count - video_frame * 2] / frame_height,
+                            box_center_x[count -
+                                         video_frame * 2] / frame_width,
+                            box_center_y[count -
+                                         video_frame * 2] / frame_height,
                         ),
                         (
                             box_center_x[count] / frame_width,
@@ -382,6 +399,7 @@ if __name__ == "__main__":
                         cv2.imwrite(output_path + "%d.jpg" % (c), frame)
                 else:
                     cv2.imwrite(output_path + "%d.jpg" % (c), frame)
+                img_list.append(frame)
 
             # print("c:",c)
             c = c + 1
@@ -392,9 +410,11 @@ if __name__ == "__main__":
             # 将影像保存到文件
 
             cv2.destroyAllWindows()
+            # image.write_video(img_list, output_path + video_name + ".mp4", 12)
             np.savetxt(
                 "../dataset/data/excel/ellipse/" + video_name + ".csv",
-                np.c_[bbox_r, ellipse_width, ellipse_height, ellipse_angle, frame_num],
+                np.c_[bbox_r, ellipse_width, ellipse_height,
+                      ellipse_angle, frame_num],
                 delimiter=",",
             )
         # print(c-count)

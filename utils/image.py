@@ -90,3 +90,13 @@ def display_bbox(img, x, y, w, h, output_path: Optional[str] = None, ratio_mode:
 
     else:
         cv2.imwrite(output_path, img)
+
+def write_video(img_list: List[np.ndarray], des: str, frame_rate: int = 25):
+    h, w, _ = img_list[0].shape
+    fourcc = cv2.VideoWriter_fourcc("*MP4V")
+    writer = cv2.VideoWriter(des, fourcc, frame_rate, (w, h))
+
+    for frame in img_list:
+        writer.write(frame)
+
+    writer.release()

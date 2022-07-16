@@ -1,5 +1,7 @@
+from array import array
 from pickle import TUPLE
 from typing import List
+from imantics import Mask
 import cv2
 import csv
 import numpy as np
@@ -140,8 +142,20 @@ def ellipse_bbox(points: np.ndarray):
 
     center = [int(pos) for pos in center]
 
-    if height > width:
-        angle = 90 - angle
-        width, height = height, width
+    # if height > width:
+    #     angle = 90 - angle
+    #     width, height = height, width
 
     return (angle, width / 2, height / 2, center)
+
+
+def mask2ellipse(mask_array: list, polygons_areas: dict):
+    polygons = Mask(mask_array).polygons()
+    polygons_points = np.array(polygons.points)
+    for i in range(len(polygons_points)):
+        polygons_areas[i] = cv2.contourArea(polygons_points[i])
+    max_idx = max(polygons_areas, key = polygons_areas.get)
+    points = np.array([[point[1], point[0]] for point in polygons_points[max_idx]])
+    angle, width, height, center = ellipse_bbox(points)
+
+    return (angle, width, height, center)

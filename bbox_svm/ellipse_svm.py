@@ -90,7 +90,7 @@ if __name__ == "__main__":
     video_start = 1
     video_end = 221
     target_range = 13
-    threshold = 0.5
+    threshold = 0.6
     avg_range = 13
     angle_list = []
     ar = []
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
             ang_v_list = get_diff_list(box_angle)
             ang_a_list = get_diff_list(ang_v_list)
-            avg_list = get_avg_list(ang_a_list, avg_range)
+            avg_list = get_avg_list(ang_v_list, avg_range)
 
             radius = 30
             frame_idx = 30
@@ -162,18 +162,18 @@ if __name__ == "__main__":
                 if 2 > abs(ar[frame_idx] - ar[frame_idx + 4]) >= threshold:
 
                     if (len(avg_list[frame_idx - radius: frame_idx + radius]) == radius * 2 and len(ar[frame_idx - radius: frame_idx + radius]) == radius * 2):
-                        ar_data.append(
-                            max(avg_list[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(
-                            min(avg_list[frame_idx - radius:frame_idx + radius]))
+                        #ar_data.append(
+                        #    max(avg_list[frame_idx - radius:frame_idx + radius]))
+                        #ar_data.append(
+                        #    min(avg_list[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             max(ar[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(
-                            min(ar[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(
-                            max(box_angle[frame_idx - radius:frame_idx + radius]))
-                        ar_data.append(
-                            min(box_angle[frame_idx - radius:frame_idx + radius]))
+                        #ar_data.append(
+                        #    min(ar[frame_idx - radius:frame_idx + radius]))
+                        #ar_data.append(
+                        #    max(box_angle[frame_idx - radius:frame_idx + radius]))
+                        #ar_data.append(
+                        #    min(box_angle[frame_idx - radius:frame_idx + radius]))
                         print(max(box_angle[frame_idx - radius:frame_idx + radius]))
                         print(min(box_angle[frame_idx - radius:frame_idx + radius]))
                             
