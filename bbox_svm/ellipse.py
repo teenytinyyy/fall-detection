@@ -112,8 +112,7 @@ if __name__ == "__main__":
         print("images#:", len(images))
         for idx, frame in enumerate(images):
             outputs = predictor(frame)
-            polygons_areas = {}
-            polygons_areas_1 = {}
+
             predictions = []
 
             for single_prediction in outputs:
