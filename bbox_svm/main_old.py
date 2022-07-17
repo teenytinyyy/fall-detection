@@ -51,8 +51,8 @@ if not os.path.isdir(output_path):
     os.makedirs(output_path)
 
 
-# def key_func(): 
-#      return os.path.split("1")[-1] 
+# def key_func():
+#      return os.path.split("1")[-1]
 
 if __name__ == '__main__':
     # output_path = "result_instance_segmentation.jpg"
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     #images = [cv2.imread(file) for file in natsorted(glob.glob("/home/ian/code/falldata/svm/"+ video_name+"/*.jpg"))]
 
-    
+
      images = [cv2.imread(file) for file in natsorted(glob.glob("./FDD_data_picture/"+ video_name+"/*.jpg"))]
 
      model_file_path = './detectron_model/config.yaml'
@@ -85,14 +85,14 @@ if __name__ == '__main__':
      cfg.MODEL.WEIGHTS = model_weights
      # 基于配置创建一个默认推断
      predictor = DefaultPredictor(cfg)
-    
+
      svm = joblib.load(svm_model_weights)
-     
+
      # 利用这个推断对加载的影像进行分析并得到结果
      # 对于输出结果格式可以参考这里https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
      #fourcc = cv2.VideoWriter_fourcc(*'MP4V')
      #out = cv2.VideoWriter('/home/ian/code/detectron2_repo/demo/output999.mp4',fourcc, 25.0, (320,  240))
-     offset=(0, 0)  
+     offset=(0, 0)
      box_top = []
      box_buttom = []
      bbox_l = []
@@ -112,14 +112,14 @@ if __name__ == '__main__':
      flag = False
      flag2 = False
      def eucliDist(A,B):
-          return math.sqrt(sum([(a - b)**2 for (a,b) in zip(A,B)]))   
-     for frame in images:     
-     
-             #print(ret) 
-             
+          return math.sqrt(sum([(a - b)**2 for (a,b) in zip(A,B)]))
+     for frame in images:
+
+             #print(ret)
+
              outputs = predictor(frame)
              #print(outputs)
-     
+
              predictions = []
              for single_prediction in outputs:
                  # Transfer relevant data to cpu
@@ -136,15 +136,15 @@ if __name__ == '__main__':
              #print(predictions["pred_boxes"])
              if len(predictions[0]["pred_masks"]) is not 0:
                  array = predictions[0]["pred_masks"][0]
-            
+
                  polygons = Mask(array).polygons()
                  m_x1,m_y1,m_x2,m_y2 = polygons.bbox()
-                 #binarizedImage = (predictions[0]["pred_masks"][0]  > 126) * 255
-                 binarizedImage = predictions[0]["pred_masks"][0]
-                 #  binarizedImage[binarizedImage == True] = 1
-                 #  binarizedImage[binarizedImage == False] = 0
-                 #print(binarizedImage)
-                 horizontal_projection = np.sum(binarizedImage, axis=0)
+                 #binarized_img = (predictions[0]["pred_masks"][0]  > 126) * 255
+                 binarized_img = predictions[0]["pred_masks"][0]
+                 #  binarized_img[binarized_img == True] = 1
+                 #  binarized_img[binarized_img == False] = 0
+                 #print(binarized_img)
+                 horizontal_projection = np.sum(binarized_img, axis=0)
                  #print(m_x1,m_y1,m_x2,m_y2)
                  #print(horizontal_projection)
                  y1_max = np.max(horizontal_projection)
@@ -160,23 +160,23 @@ if __name__ == '__main__':
                              #print(horizontal_projection[j],j)
                              h_x2 =j
                              break
-                 box_r_ori = ((m_y2-m_y1)/(h_x2-h_x1))                         
-                 if box_r_ori <=1: 
+                 box_r_ori = ((m_y2-m_y1)/(h_x2-h_x1))
+                 if box_r_ori <=1:
                      new_m_y1 =  m_y2 - y1_max
                  else:
-                     new_m_y1 =  m_y1                          
-                #  if h_thresh:    
+                     new_m_y1 =  m_y1
+                #  if h_thresh:
                 #      new_m_y1 =  m_y2 - y1_max
                 #  else:
-                #      new_m_y1 =  m_y1 
+                #      new_m_y1 =  m_y1
                  m_cX = int((h_x1 + h_x2) / 2.0)
                  m_cY = int((new_m_y1 + m_y2) / 2.0)
-                # cv2.circle(frame, (m_cX, m_cY), 4, (0, 255, 0), -1)         
+                # cv2.circle(frame, (m_cX, m_cY), 4, (0, 255, 0), -1)
                 #cv2.rectangle(frame, (h_x1, new_m_y1), (h_x2, m_y2), (0, 255, 0), 2)
-                 cv2.rectangle(frame, (m_x1, m_y1), (m_x2, m_y2), (0, 0, 255), 3)                
-                #frame = Mask(array).draw(frame, color=(0,0,255), alpha=0.5)    
+                 cv2.rectangle(frame, (m_x1, m_y1), (m_x2, m_y2), (0, 0, 255), 3)
+                #frame = Mask(array).draw(frame, color=(0,0,255), alpha=0.5)
              bbox = predictions[0]["pred_boxes"]
-             
+
              for i, box in enumerate(bbox):
                  x1, y1, x2, y2 = [int(i) for i in box]
                  x1 += offset[0]
@@ -204,7 +204,7 @@ if __name__ == '__main__':
              # box_top = y1/240
              # box_buttom = y2/240
              #bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
-             #box_r = (m_y2-new_m_y1)/(h_x2-h_x1) 
+             #box_r = (m_y2-new_m_y1)/(h_x2-h_x1)
              frame_width = int(frame.shape[1])
              frame_height = int(frame.shape[0])
              print("frame_width = ",frame_width)
@@ -213,20 +213,20 @@ if __name__ == '__main__':
              #      box_center_dis = eucliDist((box_center_x[0] / frame_width ,box_center_y[0] / frame_height),(m_cX / frame_width,m_cY / frame_height))
              #      box_center_dis_prev = eucliDist((box_center_x[c-1] / frame_width,box_center_y[c-1]),(m_cX / frame_width,m_cY / frame_height))
              #      center_dis.append(box_center_dis)
-             
-     
-               
-             
-             
+
+
+
+
+
              #writer.writerow([box_r,cX,cY,box_center_dis,box_center_dis_prev])
              #cv2.imshow('ddd',frame)
              #cv2.imwrite(output_path+"%d.jpg"%(c) , frame)
              #cv2.imwrite(output_path +"%d.jpg"%(c) , result)
-             #print(output_path +"%d.jpg"%(c))    
+             #print(output_path +"%d.jpg"%(c))
              start = time.time()
              #print(c+1)
              #print(bbox)
-             
+
              #print(cX,cY)
              # if c > 0:
              #      print(box_center_x[c-1] , '-' , cX , '+' , box_center_y[c-1] , '-' , cY,'=' ,box_center_dis)
@@ -236,7 +236,7 @@ if __name__ == '__main__':
                  bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
                  if a > 0:
                      if (a+1) %video_frame ==0:
-                         dis_label = a  
+                         dis_label = a
                      box_center_dis = eucliDist((box_center_x[dis_label] / frame_width ,box_center_y[dis_label] / frame_height),(m_cX / frame_width,m_cY / frame_height))
                      box_center_dis_prev = eucliDist((box_center_x[dis_label-1] / frame_width,box_center_y[dis_label-1]),(m_cX / frame_width,m_cY / frame_height))
                      center_dis.append(box_center_dis)
@@ -259,15 +259,15 @@ if __name__ == '__main__':
                      if label == 4:
                           action  = "lie"
                           if flag ==True:
-                           flag2=True    
-                           
-                                
+                           flag2=True
+
+
                      if label == 3:
                           action  = "sit down/sitting"
                      if label == 2:
                           action  = "stand up"
                      if label == 1:
-                          action  = "walking/standing" 
+                          action  = "walking/standing"
                      print("front_5_frame_r:",front_5_frame_r)
                      print("last_5_box_r:",last_5_box_r)
                      print("last_5_center_dis:",last_5_center_dis)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
                            cv2.imwrite(output_path + "%d.jpg"%(c), frame)
                      # if label == 5:
                      #      frame = cv2.putText(frame, "action:" + action, (frame_width -310 , frame_height -220), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
-                     #      cv2.imwrite(output_path + "%d.jpg"%(c), frame)                         
+                     #      cv2.imwrite(output_path + "%d.jpg"%(c), frame)
                 #      else:
                 #           frame = cv2.putText(frame, "action:" + action, (frame_width -310 , frame_height -220), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 255, 0))
                 #           cv2.imwrite(output_path + "%d.jpg"%(c), frame)
@@ -290,43 +290,43 @@ if __name__ == '__main__':
                 #                 cv2.imwrite(output_path + "%d.jpg"%(c), frame)
                 #            else:
                 #                 frame = cv2.putText(frame, "action:" + action, (frame_width -310 , frame_height -220), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 255, 0))
-                #                 cv2.imwrite(output_path + "%d.jpg"%(c), frame)                               
-              
+                #                 cv2.imwrite(output_path + "%d.jpg"%(c), frame)
+
                  a = a+1
                  print(a)
                  print((a+1) %25)
                  print(len(center_dis))
              if flag2 == True:
                  frame = cv2.putText(frame, "Warning", (int(frame_width/20)  , int(frame_height /5)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 255))
-             if test_mode is False:        
+             if test_mode is False:
                  if action is not None:
                       if action == "fall down":
                            frame = cv2.putText(frame, "action:" + action, (int(frame_width/30) , int(frame_height /20)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 250))
-                           cv2.imwrite(output_path + "%d.jpg"%(c), frame)                         
+                           cv2.imwrite(output_path + "%d.jpg"%(c), frame)
                       else:
                            frame = cv2.putText(frame, "action:" + action, (int(frame_width/30)  , int(frame_height /20)), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 180, 0))
                            cv2.imwrite(output_path + "%d.jpg"%(c), frame)
                  else:
-                      cv2.imwrite(output_path + "%d.jpg"%(c), frame) 
-            
+                      cv2.imwrite(output_path + "%d.jpg"%(c), frame)
+
              c=c+1
              end = time.time()
              print("執行時間：%f 秒" % (end - start))
              #out.write(result)
-     
+
              # 将影像保存到文件
-     
+
              cv2.destroyAllWindows()
      print(svm_model_weights)
      # last_5_box_r = (
-     #     #bbox_r[20] + bbox_r[21] + 
+     #     #bbox_r[20] + bbox_r[21] +
      #      bbox_r[22] +  bbox_r[23] +bbox_r[24])/3
      # print("last_5_box_r:",last_5_box_r)
      # last_5_center_dis = (center_dis[19] + center_dis[20] + center_dis[21] + center_dis[22]  + center_dis[23])/5
      # print("last_5_center_dis:",last_5_center_dis)
      # all__box_r = sum(bbox_r) / len(bbox_r)
      # print("all__box_r:",all__box_r)
-     # front_5_frame_r = (bbox_r[0] + bbox_r[1] + bbox_r[2] 
+     # front_5_frame_r = (bbox_r[0] + bbox_r[1] + bbox_r[2]
      # #+  bbox_r[3] +bbox_r[4]
      # )/3
      # print("front_5_frame_r:",front_5_frame_r)
@@ -341,7 +341,7 @@ if __name__ == '__main__':
      #                  print("action:Stand up(1)")
      #              else:
      #                  action = "Sit down"
-     #                  print("action:Sit down(1)")  
+     #                  print("action:Sit down(1)")
      #      else:
      #          action = "Fall down"
      #          print("action:Fall down")
@@ -362,5 +362,3 @@ if __name__ == '__main__':
      #              print("action:Walking")
      # cv2.putText(frame, "action:" + action, (10, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255))
      # cv2.imwrite(output_path+"24.jpg" , frame)
-                         
-     

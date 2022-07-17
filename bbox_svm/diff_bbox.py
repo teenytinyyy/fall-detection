@@ -141,9 +141,9 @@ if __name__ == "__main__":
 
                     polygons = Mask(array).polygons()
                     m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
-                    # binarizedImage = (predictions[0]["pred_masks"][0]  > 126) * 255
-                    binarizedImage = predictions[0]["pred_masks"][0]
-                    horizontal_projection = np.sum(binarizedImage, axis=0)
+                    # binarized_img = (predictions[0]["pred_masks"][0]  > 126) * 255
+                    binarized_img = predictions[0]["pred_masks"][0]
+                    horizontal_projection = np.sum(binarized_img, axis=0)
                     y1_max = np.max(horizontal_projection)  # 鉛直投影
                     thresh_ = y1_max * histogram_thresh  # 1全部加起來最高的
                     # print(y1_max)

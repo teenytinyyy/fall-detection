@@ -150,13 +150,13 @@ if __name__ == '__main__':
                 count += 1
                 json_file = "{}{}.json".format(output_path, c)
 
-                binarizedImage = predictions[0]["pred_masks"][0]
-                polygons = Mask(binarizedImage).polygons()
+                binarized_img = predictions[0]["pred_masks"][0]
+                polygons = Mask(binarized_img).polygons()
                 create_json.create_json_file(polygons.points, image_path, image_data, frame_height, frame_width, json_file)
 
                 # print(polygons)
                 m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
-                horizontal_projection = np.sum(binarizedImage, axis=0)
+                horizontal_projection = np.sum(binarized_img, axis=0)
                 y1_max = np.max(horizontal_projection)  # 鉛直投影
                 thresh_ = y1_max * histogram_thresh  # 1全部加起來最高的
                 # print(y1_max)

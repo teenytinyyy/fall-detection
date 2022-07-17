@@ -149,13 +149,24 @@ def ellipse_bbox(points: np.ndarray):
     return (angle, width / 2, height / 2, center)
 
 
-def mask2ellipse(mask_array: list, polygons_areas: dict):
+def mask2ellipse(mask_array: list):
     polygons = Mask(mask_array).polygons()
+
     polygons_points = np.array(polygons.points)
+
+    max_area = 0
+    max_idx = 0
     for i in range(len(polygons_points)):
-        polygons_areas[i] = cv2.contourArea(polygons_points[i])
-    max_idx = max(polygons_areas, key = polygons_areas.get)
+        area = cv2.contourArea(polygons_points[i])
+        if area > max_area:
+            max_area = area
+            max_idx = i
+
     points = np.array([[point[1], point[0]] for point in polygons_points[max_idx]])
+
+    # for debugging
+    # print(polygons_points[max_idx])
+
     angle, width, height, center = ellipse_bbox(points)
 
-    return (angle, width, height, center)
+    return angle, width, height, center, points

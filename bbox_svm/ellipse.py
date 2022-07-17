@@ -149,50 +149,37 @@ if __name__ == "__main__":
 
                 count += 1
 
-                # angle_1, width_1, height_1, center_1 = label_utils.mask2ellipse(mask, polygons_areas)
-                polygons = Mask(mask).polygons()
-                polygons_points = np.array(polygons.points)
-                for i in range(len(polygons_points)):
-                    polygons_areas[i] = cv2.contourArea(polygons_points[i])
-                max_idx = max(polygons_areas, key = polygons_areas.get)
-                points = np.array([[point[1], point[0]] for point in polygons_points[max_idx]])
-                angle_1, width_1, height_1, center_1 = label_utils.ellipse_bbox(points)
+                angle_1, width_1, height_1, center_1, points_1 = label_utils.mask2ellipse(mask)
 
                 # m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
-                # binarizedImage = (predictions[0]["pred_masks"][0]  > 126) * 255
-                binarizedImage = predictions[0]["pred_masks"][0]
-                horizontal_projection = np.sum(binarizedImage, axis=0)
+                # binarized_img = (predictions[0]["pred_masks"][0]  > 126) * 255
+                binarized_img = predictions[0]["pred_masks"][0]
+                horizontal_projection = np.sum(binarized_img, axis=0)
                 y1_max = np.max(horizontal_projection)  # 鉛直投影
                 thresh_ = y1_max * histogram_thresh  # 1全部加起來最高的
-                # print(y1_max)
+
                 for i in range(len(horizontal_projection)):
                     if horizontal_projection[i] >= thresh_:
                         print(i)
-                        binarizedImage[1][0:i] = False
+                        binarized_img[1][0:i] = False
                         break
+
                 for j in range(len(horizontal_projection) - 1, 0, -1):
                     if horizontal_projection[j] >= thresh_:
                         print(j)
-                        binarizedImage[1][j: -1] = False
+                        binarized_img[1][j: -1] = False
                         break
-                # angle_2, width_2, height_2, center_2 = label_utils.mask2ellipse(binarizedImage)
 
-                polygons_1 = Mask(binarizedImage).polygons()
-                polygons_points_1 = np.array(polygons_1.points)
-                for i in range(len(polygons_points_1)):
-                    polygons_areas_1[i] = cv2.contourArea(polygons_points_1[i])
-                max_idx_1 = max(polygons_areas_1, key = polygons_areas_1.get)
-                points_1 = np.array([[point_1[1], point_1[0]] for point_1 in polygons_points_1[max_idx_1]])
-                angle_2, width_2, height_2, center_2 = label_utils.ellipse_bbox(points_1)
+                angle_2, width_2, height_2, center_2, points_2 = label_utils.mask2ellipse(binarized_img)
 
                 # cv2.circle(frame, (m_cX, m_cY), 4, (0, 255, 0), -1)
                 # cv2.rectangle(frame, (h_x1, new_m_y1),
                 #                (h_x2, m_y2), (0, 255, 0), 4)
                 # cv2.rectangle(frame, (m_x1, m_y1),
                 #               (m_x2, m_y2), (0, 255, 0), 3)
-                cv2.polylines(frame, pts=[polygons_points[max_idx]], isClosed=True, color=(
+                cv2.polylines(frame, pts=[points_1], isClosed=True, color=(
                     0, 0, 255), thickness=3)
-                cv2.polylines(frame, pts=[polygons_points_1[max_idx_1]], isClosed=True, color=(
+                cv2.polylines(frame, pts=[points_2], isClosed=True, color=(
                     0, 255, 255), thickness=3)
                 cv2.ellipse(frame, (int(center_1[1]), int(center_1[0])), (int(
                     height_1), int(width_1)), int(-angle_1), 0, 360, (255, 0, 0), 4)
@@ -215,8 +202,8 @@ if __name__ == "__main__":
 
             frame_width = int(frame.shape[1])
             frame_height = int(frame.shape[0])
-            ##print("frame_width = ", frame_width)
-            ##print("frame_height = ", frame_height)
+            # print("frame_width = ", frame_width)
+            # print("frame_height = ", frame_height)
             # if c > 0:
             #      box_center_dis = eucliDist((box_center_x[0] / frame_width ,box_center_y[0] / frame_height),(m_cX / frame_width,m_cY / frame_height))
             #      box_center_dis_prev = eucliDist((box_center_x[c-1] / frame_width,box_center_y[c-1]),(m_cX / frame_width,m_cY / frame_height))
@@ -286,20 +273,20 @@ if __name__ == "__main__":
 
                     if (b + 1) % video_frame == 0:
                         last_5_box_r = (
-                            bbox_r[count]
-                            + bbox_r[count - 1]
-                            + bbox_r[count - 2]
-                            + bbox_r[count - 3]
-                            + bbox_r[count - 4]
+                            bbox_r[count] +
+                            bbox_r[count - 1] +
+                            bbox_r[count - 2] +
+                            bbox_r[count - 3] +
+                            bbox_r[count - 4]
                         ) / 5
                         # last_5_center_dis = (center_dis[0] + center_dis[1] + center_dis[2] + center_dis[3] + center_dis[4])/5
                         last_5_center_dis = box_center_dis
                         front_5_frame_r = (
-                            bbox_r[count - video_frame * 2]
-                            + bbox_r[count - video_frame * 2 + 1]
-                            + bbox_r[count - video_frame * 2 + 2]
-                            + bbox_r[count - video_frame * 2 + 3]
-                            + bbox_r[count - video_frame * 2 + 4]
+                            bbox_r[count - video_frame * 2] +
+                            bbox_r[count - video_frame * 2 + 1] +
+                            bbox_r[count - video_frame * 2 + 2] +
+                            bbox_r[count - video_frame * 2 + 3] +
+                            bbox_r[count - video_frame * 2 + 4]
                         ) / 5
                         data = np.array(
                             [front_5_frame_r, last_5_box_r, last_5_center_dis]
@@ -354,10 +341,10 @@ if __name__ == "__main__":
 
                 else:
                     if (
-                        count >= video_frame * 2
-                        and 2
-                        > abs(bbox_r[count - 4] - bbox_r[count])
-                        > checkpoint_threshold
+                        count >= video_frame * 2 and
+                        2 >
+                        abs(bbox_r[count - 4] - bbox_r[count]) >
+                        checkpoint_threshold
                     ):
                         print("bbox_r[c]:", bbox_r[count])
                         print("bbox_r[c-4]:", bbox_r[count - 4])

@@ -177,12 +177,12 @@ if __name__ == '__main__':
 
             polygons = Mask(array).polygons()
             m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
-            #binarizedImage = (predictions[0]["pred_masks"][0]  > 126) * 255
-            binarizedImage = predictions[0]["pred_masks"][0]
-            #  binarizedImage[binarizedImage == True] = 1
-            #  binarizedImage[binarizedImage == False] = 0
-            # print(binarizedImage)
-            horizontal_projection = np.sum(binarizedImage, axis=0)
+            #binarized_img = (predictions[0]["pred_masks"][0]  > 126) * 255
+            binarized_img = predictions[0]["pred_masks"][0]
+            #  binarized_img[binarized_img == True] = 1
+            #  binarized_img[binarized_img == False] = 0
+            # print(binarized_img)
+            horizontal_projection = np.sum(binarized_img, axis=0)
             # print(m_x1,m_y1,m_x2,m_y2)
             # print(horizontal_projection)
             y1_max = np.max(horizontal_projection)  # 鉛直投影
@@ -405,4 +405,3 @@ if __name__ == '__main__':
     #              print("action:Walking")
     # cv2.putText(frame, "action:" + action, (10, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255))
     # cv2.imwrite(output_path+"24.jpg" , frame)
-
