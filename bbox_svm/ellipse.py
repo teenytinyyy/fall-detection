@@ -25,7 +25,7 @@ setup_logger()
 if __name__ == "__main__":
 
     # for num in range(1, 2):
-    for num1 in range(1, 222):
+    for num1 in range(11, 12):
         checkpoint_threshold = 0.6
         histogram_thresh = 0.3  # 20%閥值
         test_mode = False
@@ -82,8 +82,9 @@ if __name__ == "__main__":
         bbox_all = []
         frame_num = []
         center_dis = []
-        box_center_x = []
-        box_center_y = []
+        box_len_x = []
+        box_len_y = []
+        box_top_y = []
         ellipse_width = []
         ellipse_height = []
         ellipse_angle = []
@@ -159,14 +160,14 @@ if __name__ == "__main__":
 
                 for i in range(len(horizontal_projection)):
                     if horizontal_projection[i] >= thresh_:
-                        print(i)
-                        binarized_img[1][0:i] = False
+                        for j in range(len(binarized_img)):                            
+                            binarized_img[j][0 : i] = False
                         break
 
-                for j in range(len(horizontal_projection) - 1, 0, -1):
-                    if horizontal_projection[j] >= thresh_:
-                        print(j)
-                        binarized_img[1][j: -1] = False
+                for i in range(len(horizontal_projection) - 1, 0, -1):
+                    if horizontal_projection[i] >= thresh_:
+                        for j in range(len(binarized_img)):                            
+                            binarized_img[j][i : -1] = False
                         break
 
                 angle_2, width_2, height_2, center_2, points_2 = label_utils.mask2ellipse(binarized_img)
@@ -177,16 +178,16 @@ if __name__ == "__main__":
                 # cv2.rectangle(frame, (m_x1, m_y1),
                 #               (m_x2, m_y2), (0, 255, 0), 3)
                 cv2.polylines(frame, pts=[points_1], isClosed=True, color=(
-                    0, 0, 255), thickness=3)
+                    0, 255, 0), thickness=2)
                 cv2.polylines(frame, pts=[points_2], isClosed=True, color=(
-                    0, 255, 255), thickness=3)
+                    0, 0, 255), thickness=3)
                 cv2.ellipse(frame, (int(center_1[1]), int(center_1[0])), (int(
                     height_1), int(width_1)), int(-angle_1), 0, 360, (255, 0, 0), 4)
                 cv2.ellipse(frame, (int(center_2[1]), int(center_2[0])), (int(
                     height_2), int(width_2)), int(-angle_2), 0, 360, (255, 255, 0), 2)
                 # cv2.rectangle(frame, (m_x1_p1, m_y1_p1),
                 #               (m_x2_p1, m_y2_p1), (0, 0, 255), 2)
-                frame = Mask(mask).draw(frame, color=(255, 0, 255), alpha=0.5)
+                # frame = Mask(binarized_img).draw(frame, color=(255, 0, 255), alpha=0.5)
 
             bbox = predictions[0]["pred_boxes"]
 
@@ -204,8 +205,8 @@ if __name__ == "__main__":
             # print("frame_width = ", frame_width)
             # print("frame_height = ", frame_height)
             # if c > 0:
-            #      box_center_dis = eucliDist((box_center_x[0] / frame_width ,box_center_y[0] / frame_height),(m_cX / frame_width,m_cY / frame_height))
-            #      box_center_dis_prev = eucliDist((box_center_x[c-1] / frame_width,box_center_y[c-1]),(m_cX / frame_width,m_cY / frame_height))
+            #      box_center_dis = eucliDist((box_len_x[0] / frame_width ,box_top_y[0] / frame_height),(m_cX / frame_width,m_cY / frame_height))
+            #      box_center_dis_prev = eucliDist((box_len_x[c-1] / frame_width,box_top_y[c-1]),(m_cX / frame_width,m_cY / frame_height))
             #      center_dis.append(box_center_dis)
 
             # writer.writerow([box_r,cX,cY,box_center_dis,box_center_dis_prev])
@@ -220,29 +221,34 @@ if __name__ == "__main__":
 
             # print(cX,cY)
             # if c > 0:
-            #      print(box_center_x[c-1] , '-' , cX , '+' , box_center_y[c-1] , '-' , cY,'=' ,box_center_dis)
+            #      print(box_len_x[c-1] , '-' , cX , '+' , box_top_y[c-1] , '-' , cY,'=' ,box_center_dis)
 
             # Calculate start
             if len(predictions[0]["pred_masks"]) != 0:
-                if height_1 > width_1:
-                    angle_1 = 90 - angle_1
-                    width_1, height_1 = height_1, width_1
-                box_center_x.append(width_1)
-                box_center_y.append(height_1)
+                if height_2 > width_2:
+                    angle_2 = 90 - angle_2
+                    width_2, height_2 = height_2, width_2
+                len_x_2 = math.cos(angle_2 * math.pi/180) * height_2
+                len_y_2 = math.cos(angle_2 * math.pi/180) * width_2
+                top_y_2 = center_2[1] + abs(len_y_2 / 2)
+
+                box_len_x.append(abs(len_x_2))
+                box_len_y.append(abs(len_y_2))
+                box_top_y.append(top_y_2)
                 ellipse_width.append(width_2)
                 ellipse_height.append(height_2)
                 ellipse_angle.append(angle_2)
                 # ellipse_height.append((m_x2,m_y2))
                 frame_num.append(c)
-                if width_1 == 0 or height_1 == 0:
+                if width_2 == 0 or height_2 == 0:
                     bbox_r.append(0)
                 elif angle_1 > 45:
-                    bbox_r.append(height_1 / width_1)
+                    bbox_r.append(height_2 / width_2)
                 else:
-                    bbox_r.append(width_1 / height_1)
+                    bbox_r.append(width_2 / height_2)
                 # bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
                 # print(bbox_r)
-                # print(box_center_x)
+                # print(box_len_x)
 
                 if flag_checkpoint == True:
                     # Check moving
@@ -252,22 +258,22 @@ if __name__ == "__main__":
 
                     box_center_dis = eucliDist(
                         (
-                            box_center_x[count -
+                            box_len_x[count -
                                          video_frame * 2] / frame_width,
-                            box_center_y[count -
+                            box_top_y[count -
                                          video_frame * 2] / frame_height,
                         ),
                         (
-                            box_center_x[count] / frame_width,
-                            box_center_y[count] / frame_height,
+                            box_len_x[count] / frame_width,
+                            box_top_y[count] / frame_height,
                         ),
                     )
-                    # box_center_dis = eucliDist((box_center_x[c-video_frame] / frame_width, box_center_y[c-video_frame] / frame_height), (box_center_x[c-4-video_frame] / frame_width, box_center_y[c-4-video_frame] / frame_height))
-                    # box_center_dis = eucliDist((box_center_x[dis_label] / frame_width, box_center_y[dis_label] / frame_height), (m_cX / frame_width, m_cY / frame_height))
-                    # box_center_dis_prev = eucliDist((box_center_x[dis_label-1] / frame_width,box_center_y[dis_label-1]),(m_cX / frame_width,m_cY / frame_height))
+                    # box_center_dis = eucliDist((box_len_x[c-video_frame] / frame_width, box_top_y[c-video_frame] / frame_height), (box_len_x[c-4-video_frame] / frame_width, box_top_y[c-4-video_frame] / frame_height))
+                    # box_center_dis = eucliDist((box_len_x[dis_label] / frame_width, box_top_y[dis_label] / frame_height), (m_cX / frame_width, m_cY / frame_height))
+                    # box_center_dis_prev = eucliDist((box_len_x[dis_label-1] / frame_width,box_top_y[dis_label-1]),(m_cX / frame_width,m_cY / frame_height))
                     # center_dis.append(box_center_dis)
-                    # print("box_center_x:",box_center_x[dis_label])
-                    # print("box_center_y:",box_center_y[dis_label])
+                    # print("box_len_x:",box_len_x[dis_label])
+                    # print("box_top_y:",box_top_y[dis_label])
                     # print(center_dis)
 
                     if (b + 1) % video_frame == 0:
@@ -399,8 +405,8 @@ if __name__ == "__main__":
             # image.write_video(img_list, output_path + video_name + ".mp4", 12)
             np.savetxt(
                 "../dataset/data/excel/ellipse/" + video_name + ".csv",
-                np.c_[bbox_r, ellipse_width, ellipse_height,
-                      ellipse_angle, frame_num],
+                np.c_[bbox_r,ellipse_width, ellipse_height, ellipse_angle, box_top_y, box_len_y, box_len_x,
+                       frame_num],
                 delimiter=",",
             )
         # print(c-count)

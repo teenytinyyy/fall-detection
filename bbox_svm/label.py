@@ -142,10 +142,6 @@ def ellipse_bbox(points: np.ndarray):
 
     center = [int(pos) for pos in center]
 
-    # if height > width:
-    #     angle = 90 - angle
-    #     width, height = height, width
-
     return (angle, width / 2, height / 2, center)
 
 
@@ -164,9 +160,10 @@ def mask2ellipse(mask_array: list):
 
     points = np.array([[point[1], point[0]] for point in polygons_points[max_idx]])
 
+
     # for debugging
     # print(polygons_points[max_idx])
 
     angle, width, height, center = ellipse_bbox(points)
 
-    return angle, width, height, center, points
+    return angle, width, height, center, polygons_points[max_idx]
