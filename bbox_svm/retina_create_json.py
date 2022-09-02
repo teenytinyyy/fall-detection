@@ -20,75 +20,32 @@ from detectron2.utils.logger import setup_logger
 import csv
 import math
 import glob
+import create_json
+import files
 setup_logger()
 
-# 加载其它一些库
-# 加载相关工具
-#input_path = "/home/ian/code/falldata/Office/office(1).avi"
 
-# input_path = "/home/ian/code/detectron2_repo/demo/bbox_middle/fall1"
-# out_put_img = "/home/ian/code/detectron2_repo/demo/bbox_middle/fall1/coffee(1)047.jpg"
-# 圖片轉影片指令 ffmpeg -i %1d.jpg -r 25 output.mp4
-# 影片轉圖片指令 ffmpeg -i input.mkv out%d.bmp
-#for num in range(1, 2):
+if __name__ == '__main__':
 
+    # 加载其它一些库
+    # 加载相关工具
+    #input_path = "/home/ian/code/falldata/Office/office(1).avi"
 
-
-if __name__ == "__main__":
-
-    for num in range(1, 24):
-        for num1 in range(1, 8):
-            video_name = "data (" + str(num) + "_" + str(num1) + ")"
-            video_name_new = "data" + str(num) + "_" + str(num1)
-
-            IMAGES = [cv2.imread(file) for file in natsorted(glob.glob("../dataset/data/FDD_data_picture/" + video_name + "/*.jpg"))]
-            # MODEL_FILE_PATH = '../states/detectron_model/config.yaml'
-            # MODEL_WEIGHTS = "../states/detectron_model/model_final.pth"
-            MODEL_FILE_PATH = '../states/detectron_model/Base-RCNN-FPN.yaml'
-            MODEL_WEIGHTS = "../states/detectron_model/model_final_mask_rcnn.pkl"
-            SVM_MODEL_WEIGHTS = "../states/SVM_model/svm_true_fall101_new_v2_c3095.model"
-
-            output_path = '../dataset/data/mask_rcnn/' + video_name_new + "/"
-            if not os.path.isdir(output_path):
-                os.makedirs(output_path)
-
+    # input_path = "/home/ian/code/detectron2_repo/demo/bbox_middle/fall1"
+    # out_put_img = "/home/ian/code/detectron2_repo/demo/bbox_middle/fall1/coffee(1)047.jpg"
+    # 圖片轉影片指令 ffmpeg -i %1d.jpg -r 25 output.mp4
+    # 影片轉圖片指令 ffmpeg -i input.mkv out%d.bmp
+    for num in range(1, 2):
+        for num1 in range(1, 2):
             checkpoint_threshold = 0.6
             histogram_thresh = 0.1  # 20%閥值
             test_mode = False
+            h_thresh = True  # control testing true or false(test bool)
+            svm_model = "true"  # control svm model true or false(data bool)
+            #video_name = "data (" + str(num) + "_" + str(num1) + ")"
+            video_name = "data (" + str(num) + "_" + str(num1) + ")"
             video_frame = 8
-            #class_name = "fall"
-
-
-
-            # def key_func():
-            #      return os.path.split("1")[-1]
-
-
-            #cap = cv2.VideoCapture(input_path)
-            # 指定模型的配置配置文件路径及网络参数文件的路径
-            # 对于像下面这样写法的网络参数文件路径，程序在运行的时候就自动寻找，如果没有则下载。
-            # Instance segmentation model
-
-
-            # 创建一个detectron2配置
-            cfg = get_cfg()
-            # 要创建模型的名称
-            cfg.merge_from_file(MODEL_FILE_PATH)
-            # 为模型设置阈值
-            cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.9
-            #cfg.MODEL.RETINANET.SCORE_THRESH_TEST = 0.95
-            # 加载模型需要的数据
-            cfg.MODEL.WEIGHTS = MODEL_WEIGHTS
-            # 基于配置创建一个默认推断
-            predictor = DefaultPredictor(cfg)
-
-            svm = joblib.load(SVM_MODEL_WEIGHTS)
-
-            # 利用这个推断对加载的影像进行分析并得到结果
-            # 对于输出结果格式可以参考这里https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
-            #fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-            #out = cv2.VideoWriter('/home/ian/code/detectron2_repo/demo/output999.mp4',fourcc, 25.0, (320,  240))
-            offset = (0, 0)
+            input_path = "../dataset/data/FDD_data_picture/" + video_name
 
             box_top = []
             box_bottom = []
@@ -115,13 +72,63 @@ if __name__ == "__main__":
             flag2 = False
             flag_checkpoint = False
 
+            if h_thresh:
+                test_bool = "true"
+            else:
+                test_bool = "false"
+            output_path = '../dataset/data/json/json_' + video_name + "/"
+            if not os.path.isdir(output_path):
+                os.makedirs(output_path)
+
+        # def key_func():
+        #      return os.path.split("1")[-1]
+
+
+            images = [cv2.imread(file) for file in natsorted(
+                glob.glob("../dataset/data/FDD_data_picture/" + video_name + "/*.jpg"))]
+            image_path_list = files.get_files(input_path)
+            image_path = image_path_list[c]
+            image_data = create_json.img_data(image_path)
+
+        #cap = cv2.VideoCapture(input_path)
+        # 指定模型的配置配置文件路径及网络参数文件的路径
+        # 对于像下面这样写法的网络参数文件路径，程序在运行的时候就自动寻找，如果没有则下载。
+        # Instance segmentation model
+            model_file_path = '../states/detectron_model/Base-RCNN-FPN.yaml'
+            model_weights = "../states/detectron_model/model_final_mask_rcnn.pkl"
+            svm_model_weights = "../states/SVM_model/svm_true_fall101_new_v2_c3095.model"
+            # 加载图片
+
+            # 创建一个detectron2配置
+            cfg = get_cfg()
+            # 要创建模型的名称
+            cfg.merge_from_file(model_file_path)
+            # 为模型设置阈值
+            cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.9
+            #cfg.MODEL.RETINANET.SCORE_THRESH_TEST = 0.95
+            # 加载模型需要的数据
+            cfg.MODEL.WEIGHTS = model_weights
+            # 基于配置创建一个默认推断
+            predictor = DefaultPredictor(cfg)
+
+            svm = joblib.load(svm_model_weights)
+
+            # 利用这个推断对加载的影像进行分析并得到结果
+            # 对于输出结果格式可以参考这里https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
+            #fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+            #out = cv2.VideoWriter('/home/ian/code/detectron2_repo/demo/output999.mp4',fourcc, 25.0, (320,  240))
+            offset = (0, 0)
+
+
             def eucliDist(A, B):
                 return math.sqrt(sum([(a - b)**2 for (a, b) in zip(A, B)]))
 
-            print("images#:", len(IMAGES))
-            for idx, frame in enumerate(IMAGES):
+            print("images#:", len(images))
+            for idx, frame in enumerate(images):
                 # print(ret)
                 # print(idx)
+                frame_width = int(frame.shape[1])
+                frame_height = int(frame.shape[0])
 
                 outputs = predictor(frame)
                 # print(outputs)
@@ -134,65 +141,55 @@ if __name__ == "__main__":
                     single_prediction_cpu = single_prediction["instances"].to(
                         "cpu")._fields
                 person_selection_mask = single_prediction_cpu["pred_classes"] == 0
-                box_selection_mask = person_selection_mask
-                predictions.append({"pred_boxes": single_prediction_cpu["pred_boxes"].tensor[box_selection_mask].data.numpy(),
-                                    "scores": single_prediction_cpu["scores"][box_selection_mask].data.numpy(),
-                                    "pred_masks": single_prediction_cpu["pred_classes"][box_selection_mask].data.numpy()})
-                # print(predictions)
-                # print(predictions[0]["pred_boxes"][1])
-                # print(predictions["pred_boxes"])
+                predictions.append({"pred_boxes": single_prediction_cpu["pred_boxes"].tensor[person_selection_mask].data.numpy(),
+                                    "scores": single_prediction_cpu["scores"][person_selection_mask].data.numpy(),
+                                    "pred_masks": single_prediction_cpu["pred_classes"][person_selection_mask].data.numpy()})
+
                 if len(predictions[0]["pred_masks"]) != 0:  # 防呆 is not
                     # 第一個人的MASK拿出來，只測一人
-                    array = predictions[0]["pred_masks"][0]
-
                     count += 1
-                    # print(count)
+                    json_file = "{}{}.json".format(output_path, c)
 
-                    polygons = Mask(array).polygons()
-                    # poly_points = []
-                    # for poly_point in polygons:
-                    #     points = [int(val) for val in poly_point]
-                    #     poly_points.append(points)
-                    m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
-                    #binarized_img = (predictions[0]["pred_masks"][0]  > 126) * 255
                     binarized_img = predictions[0]["pred_masks"][0]
-                    #  binarized_img[binarized_img == True] = 1
-                    #  binarized_img[binarized_img == False] = 0
-                    # print(binarized_img)
+                    polygons = Mask(binarized_img).polygons()
+                    create_json.create_json_file(polygons.points, image_path, image_data, frame_height, frame_width, json_file)
+
+                    # print(polygons)
+                    m_x1, m_y1, m_x2, m_y2 = polygons.bbox()  # maskrcnn的bbox
                     horizontal_projection = np.sum(binarized_img, axis=0)
-                    # print(m_x1,m_y1,m_x2,m_y2)
-                    # print(horizontal_projection)
                     y1_max = np.max(horizontal_projection)  # 鉛直投影
                     thresh_ = y1_max * histogram_thresh  # 1全部加起來最高的
                     # print(y1_max)
                     for i in range(len(horizontal_projection)):
                         if horizontal_projection[i] >= thresh_:
-                            # print(horizontal_projection[i],i)
-                            h_x1 = i
+                            for j in range(len(binarized_img)):                            
+                                binarized_img[j][0 : i] = False
                             break
                     for j in range(len(horizontal_projection)-1, 0, -1):
                         if horizontal_projection[j] >= thresh_:
-                            # print(horizontal_projection[j],j)
-                            h_x2 = j
+                            for j in range(len(binarized_img)):                            
+                                binarized_img[j][i : -1] = False
                             break
-                    box_r_ori = ((m_y2-m_y1)/(h_x2-h_x1))
-                    
+                    # box_r_ori = ((m_y2-m_y1)/(h_x2-h_x1))
                     # if box_r_ori <= 1:  # 斜躺才修正
 
                     #     new_m_y1 = m_y2 - y1_max
                     # else:
                     #     new_m_y1 = m_y1
-                    
+                #  if h_thresh:
 
+                #      new_m_y1 =  m_y2 - y1_max
+                #  else:
+                #      new_m_y1 =  m_y1
 
-                    m_cX = int((h_x1 + h_x2) / 2.0)
+                    m_cX = int((m_x1 + m_x2) / 2.0)
                     m_cY = int((m_y1 + m_y2) / 2.0)
                 # cv2.circle(frame, (m_cX, m_cY), 4, (0, 255, 0), -1)
-                    cv2.rectangle(frame, (h_x1, m_y1),
-                                    (h_x2, m_y2), (0, 255, 0), 2)
+                    # cv2.rectangle(frame, (m_x1, m_y1),
+                    #                 (m_x2, m_y2), (0, 255, 0), 2)
                     cv2.rectangle(frame, (m_x1, m_y1),
                                     (m_x2, m_y2), (0, 0, 255), 3)
-                #frame = Mask(array).draw(frame, color=(0,0,255), alpha=0.5)
+                    frame = Mask(binarized_img).draw(frame, color=(0,0,255), alpha=0.5)
 
                 bbox = predictions[0]["pred_boxes"]
 
@@ -224,8 +221,6 @@ if __name__ == "__main__":
                 # bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
                 #box_r = (m_y2-new_m_y1)/(h_x2-h_x1)
 
-                frame_width = int(frame.shape[1])
-                frame_height = int(frame.shape[0])
         ##print("frame_width = ", frame_width)
         ##print("frame_height = ", frame_height)
                 # if c > 0:
@@ -252,11 +247,11 @@ if __name__ == "__main__":
                     box_center_x.append(m_cX)
                     box_center_y.append(m_cY)
                     box_top_center.append((m_cX, m_y1))
-                    box_bottom_right.append((h_x2, m_y2))
+                    box_bottom_right.append((m_x2, m_y2))
                     # box_bottom_right.append((m_x2,m_y2))
                     frame_num.append(c)
-                    # bbox_r.append((m_y2-m_y1)/(m_x2-m_x1))
-                    bbox_r.append((m_y2-m_y1)/(h_x2-h_x1))
+                    bbox_r.append((m_y2-m_y1)/(m_x2-m_x1))
+                    # bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
                     # print(bbox_r)
                     # print(box_center_x)
 
@@ -282,7 +277,7 @@ if __name__ == "__main__":
                             #last_5_center_dis = (center_dis[0] + center_dis[1] + center_dis[2] + center_dis[3] + center_dis[4])/5
                             last_5_center_dis = (box_center_dis)
                             front_5_frame_r = (bbox_r[count-video_frame*2] + bbox_r[count-video_frame*2+1] + bbox_r[count -
-                                                video_frame*2+2] + bbox_r[count-video_frame*2+3] + bbox_r[count-video_frame*2+4])/5
+                                                                                                                    video_frame*2+2] + bbox_r[count-video_frame*2+3] + bbox_r[count-video_frame*2+4])/5
                             data = np.array(
                                 [front_5_frame_r, last_5_box_r, last_5_center_dis]).reshape(1, -1)
                             label = svm.predict(data)
@@ -356,6 +351,6 @@ if __name__ == "__main__":
                 # 将影像保存到文件
 
                 cv2.destroyAllWindows()
-                np.savetxt('../dataset/data/excel/8cam/' + video_name_new + '.csv', np.c_[
-                            bbox_r, box_top_center, box_bottom_right, frame_num], delimiter=',')
+                np.savetxt('../dataset/data/excel/2cam/test_mask_rcnn/' + video_name + '.csv', np.c_[
+                    bbox_r, box_top_center, box_bottom_right, frame_num], delimiter=',')
             # print(c-count)

@@ -128,11 +128,12 @@ CLASS_NAMES =[
 
 #tensorboard
 
-DATASET_ROOT = './coco/images/'
-ANN_ROOT = os.path.join(DATASET_ROOT, 'COCOformat')
+DATASET_ROOT = '../dataset/data/8cam_data/train_cocococo'
+ANN_ROOT = os.path.join(DATASET_ROOT, 'annotations')
 
-TRAIN_PATH = os.path.join(DATASET_ROOT, 'JPEGImages')
-VAL_PATH = os.path.join(DATASET_ROOT, 'JPEGImages')
+TRAIN_PATH = os.path.join(DATASET_ROOT, 'images')
+VAL_PATH = os.path.join(DATASET_ROOT, 'images')
+
 TRAIN_JSON = os.path.join(ANN_ROOT, 'instances_train2017.json')
 VAL_JSON = os.path.join(ANN_ROOT, 'instances_val2017.json')
 # 声明数据集的子集
@@ -288,7 +289,7 @@ def setup(args):
     cfg = get_cfg()
     #args.config_file = "../configs/COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml" 
     #args.config_file = "/home/ian/code/detectron2_repo/tools/output_2class/config.yaml" 
-    args.config_file = "./detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"
+    args.config_file = "../states/detectron_model/mask_rcnn_R_50_FPN_3x.yaml"
     cfg.merge_from_file(args.config_file)   # 从config file 覆盖配置
     cfg.merge_from_list(args.opts)          # 从CLI参数 覆盖配置
 
@@ -306,18 +307,18 @@ def setup(args):
     cfg.DATALOADER.NUM_WORKERS = 4  # 单线程
 
     cfg.INPUT.CROP.ENABLED = True
-    cfg.INPUT.MAX_SIZE_TRAIN = 320 # 训练图片输入的最大尺寸
-    cfg.INPUT.MAX_SIZE_TEST = 320 # 测试数据输入的最大尺寸
-    cfg.INPUT.MIN_SIZE_TRAIN = (180, 320) # 训练图片输入的最小尺寸，可以设定为多尺度训练
-    cfg.INPUT.MIN_SIZE_TEST = 320
+    cfg.INPUT.MAX_SIZE_TRAIN = 720 # 训练图片输入的最大尺寸
+    cfg.INPUT.MAX_SIZE_TEST = 720 # 测试数据输入的最大尺寸
+    cfg.INPUT.MIN_SIZE_TRAIN = (480, 720) # 训练图片输入的最小尺寸，可以设定为多尺度训练
+    cfg.INPUT.MIN_SIZE_TEST = 480
     #cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING，其存在两种配置，分别为 choice 与 range ：
     # range 让图像的短边从 512-768随机选择
     #choice ： 把输入图像转化为指定的，有限的几种图片大小进行训练，即短边只能为 512或者768
     cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING = 'range'
 #  本句一定要看下注释！！！！！！！！
     #cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128 
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
-    cfg.MODEL.RETINANET.NUM_CLASSES = 2  # 类别数+1（因为有background，也就是你的 cate id 从 1 开始，如果您的数据集Json下标从 0 开始，这个改为您对应的类别就行，不用再加背景类！！！！！）
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
+    cfg.MODEL.RETINANET.NUM_CLASSES = 1  # 类别数+1（因为有background，也就是你的 cate id 从 1 开始，如果您的数据集Json下标从 0 开始，这个改为您对应的类别就行，不用再加背景类！！！！！）
     # cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[32, 64, 128, 256]]
     # cfg.MODEL.RETINANET.IN_FEATURES = ["p4", "p5", "p6","p7"]
     cfg.MODEL.RETINANET.FOCAL_LOSS_ALPHA = 0.05
@@ -327,7 +328,7 @@ def setup(args):
 
     #cfg.MODEL.WEIGHTS="/home/yourstorePath/.pth"
     #cfg.MODEL.WEIGHTS = "../model/model_final_280758.pkl"    # 预训练模型权重  
-    cfg.MODEL.WEIGHTS = "/home/ian/code/detectron2_repo/tools/output_2class/model_final.pth"
+    cfg.MODEL.WEIGHTS = "../states/detectron_model/model_final_mask_rcnn.pkl"
     #cfg.MODEL.WEIGHTS = "../model/model_final_5bd44e.pkl" 
     
     #cfg.MODEL.WEIGHTS = "/home/ian/code/detectron2_repo/model/model_final_mask_r50.pkl" 

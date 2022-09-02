@@ -25,7 +25,7 @@ setup_logger()
 if __name__ == "__main__":
 
     # for num in range(1, 2):
-    for num1 in range(11, 12):
+    for num1 in range(1, 222):
         checkpoint_threshold = 0.6
         histogram_thresh = 0.3  # 20%閥值
         test_mode = False
@@ -228,8 +228,16 @@ if __name__ == "__main__":
                 if height_2 > width_2:
                     angle_2 = 90 - angle_2
                     width_2, height_2 = height_2, width_2
-                len_x_2 = math.cos(angle_2 * math.pi/180) * height_2
-                len_y_2 = math.cos(angle_2 * math.pi/180) * width_2
+                if angle_2 < 45:
+                    len_x_2 = math.cos(angle_2 * math.pi/180) * height_2 * 2
+                    len_y_2 = math.cos(angle_2 * math.pi/180) * width_2 * 2
+                elif angle_2 == 45:
+                    len_x_2 = len_y_2 = math.cos(angle_2 * math.pi/180) * height_2 * 2
+                else:
+                    len_y_2 = math.cos(angle_2 * math.pi/180) * height_2 * 2
+                    len_x_2 = math.cos(angle_2 * math.pi/180) * width_2 * 2
+
+
                 top_y_2 = center_2[1] + abs(len_y_2 / 2)
 
                 box_len_x.append(abs(len_x_2))
@@ -242,10 +250,8 @@ if __name__ == "__main__":
                 frame_num.append(c)
                 if width_2 == 0 or height_2 == 0:
                     bbox_r.append(0)
-                elif angle_1 > 45:
-                    bbox_r.append(height_2 / width_2)
                 else:
-                    bbox_r.append(width_2 / height_2)
+                    bbox_r.append(len_y_2 / len_x_2)
                 # bbox_r.append((m_y2-new_m_y1)/(h_x2-h_x1))
                 # print(bbox_r)
                 # print(box_len_x)
@@ -405,7 +411,7 @@ if __name__ == "__main__":
             # image.write_video(img_list, output_path + video_name + ".mp4", 12)
             np.savetxt(
                 "../dataset/data/excel/ellipse/" + video_name + ".csv",
-                np.c_[bbox_r,ellipse_width, ellipse_height, ellipse_angle, box_top_y, box_len_y, box_len_x,
+                np.c_[bbox_r, ellipse_width, ellipse_height, ellipse_angle, box_top_y, box_len_y, box_len_x,
                        frame_num],
                 delimiter=",",
             )

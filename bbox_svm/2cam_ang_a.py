@@ -1,5 +1,6 @@
 import csv
 import math
+from tabnanny import check
 import numpy as np
 from typing import Dict, List
 import random
@@ -49,19 +50,26 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
     return avg_list
 
 
-def test_svm_classify(data: np.ndarray, target: np.ndarray, rev_idx: Dict, train_ratio: float = 0.7):
+def test_svm_classify(data: np.ndarray, target: np.ndarray, check_list: np.ndarray, rev_idx: Dict, train_ratio: float = 0.7):
     randomized_indices = random_indices(0, len(data))
     x_train = data[randomized_indices[0: int(train_ratio * len(data))]]
     y_train = target[randomized_indices[0: int(train_ratio * len(data))]]
 
     x_test = data[randomized_indices[int(train_ratio * len(data)): len(data)]]
-    y_test = target[randomized_indices[int(
-        train_ratio * len(data)): len(data)]]
+    y_test = target[randomized_indices[int(train_ratio * len(data)): len(data)]]
+    check_points = check_list[randomized_indices[int(train_ratio * len(data)): len(data)]]
 
     clf = SVC()
     clf.fit(x_train, y_train)
 
     y_predict = clf.predict(x_test)
+
+    for i in range(len(y_predict)):
+        if y_predict[i] == 1 and check_points[i][0] <= 0 and check_points[i][1] <= 1.5:
+            y_predict[i] = 1
+        else:
+            y_predict[i] = 0
+
     diff_indices = np.where(y_test ^ y_predict > 0)[0]
 
     diff_dict = {}
@@ -95,24 +103,18 @@ if __name__ == "__main__":
     angle_list = []
     ar = []
     ar_data = []
-    last_frame_ar = []
     box_top_center_x = []
     box_top_center_y = []
     box_bottom_right_x = []
     box_bottom_right_y = []
+    check_points = []
+    check_list = []
     fall_target = []
     fall_data = []
     labels = []
-    max_data = []
-    min_data = []
-    sec_data = []
-    sec_fall_data = []
-    N3_data = []
-    N3_fall_data = []
     target_start = []
     target_end = []
     unused_num = []
-    y_dis_list = []
     idx = 0
     count = 0
     count_2 = 0
@@ -132,7 +134,7 @@ if __name__ == "__main__":
             unused_num.append(int(row[0]))
 
     for num in range(video_start, video_end + 1):
-        file_path = "../dataset/data/excel/2cam/data (" + str(num) + ").csv"
+        file_path = "../dataset/data/excel/2cam/test_data (" + str(num) + ").csv"
         # file = open(file_name, newline='')  with用完會幫你關，單用open 要自己關
         # rows = csv.reader(file)
 
@@ -157,15 +159,15 @@ if __name__ == "__main__":
                 )
                 angle_list.append(ang)
 
-            y_top_dis = get_diff_list(box_top_center_y)
+            radius = 30
+            frame_idx = 30
+
             # y_top_v = get_diff_list(y_top_dis)
-            y_top_avg = get_avg_list(y_top_dis, avg_range)
             ang_v_list = get_diff_list(angle_list)
             ang_a_list = get_diff_list(ang_v_list)
             avg_list = get_abs_avg_list(ang_a_list, avg_range)
 
-            radius = 30
-            frame_idx = 30
+
             while True:
 
                 if len(ar) - 4 <= frame_idx or len(avg_list) - radius <= frame_idx:
@@ -183,13 +185,14 @@ if __name__ == "__main__":
                         ar_data.append(
                             min(ar[frame_idx - radius:frame_idx + radius]))
 
-                        last_frame_ar.append(ar[frame_idx + radius])
-
+                        check_points.append(box_top_center_y[frame_idx - radius] - box_top_center_y[frame_idx + radius])
+                        check_points.append(ar[frame_idx + radius])
 
                         fall_data.append(ar_data)
+                        check_list.append(check_points)
 
 
-                        # if last_frame_ar[-1] > 1:
+                        # if check_points[-1] > 1:
                         #     fall_target.append(0)
                         #     frame_idx += radius
                         #     print("video:", num)
@@ -197,20 +200,18 @@ if __name__ == "__main__":
                         #     print("label:", 0)
 
                         if (frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius):
-                            if last_frame_ar[-1] > 1:
-                                fall_target.append(2)
-                                print("video:", num)
-                                print("picture:", frame_idx)
-                                print("label:", 0)                                
-                                print(last_frame_ar[-1])
-                                count_2 += 1
+                            # if check_points[-1] > 1:
+                            #     fall_target.append(2)                
+                            #     count_2 += 1
 
-                            else:                                
-                                fall_target.append(1)
-                                print("video:", num)
-                                print("picture:", frame_idx)
-                                print("label:", 1)
-                            
+                            # else:                                
+                            fall_target.append(1)
+                            print("video:", num)
+                            print("picture:", frame_idx)
+                            print("label:", 1)
+                            print("y", check_points)
+                            print(ar[frame_idx + radius])
+
                             frame_idx += radius
                         else:
                             fall_target.append(0)
@@ -225,6 +226,7 @@ if __name__ == "__main__":
                     count += 1
                     frame_idx += 1
                     ar_data = []
+                    check_points = []
 
                     continue
 
@@ -240,20 +242,18 @@ if __name__ == "__main__":
             box_top_center_y = []
             box_bottom_right_x = []
             box_bottom_right_y = []
-            y_dis_list = []
-            y_top_v = []
-            y_top_a = []
 
-    print("all_target", len(fall_target))
+    print("fall_target", len(fall_target))
     print("thres", count)
     print("fall", sum(fall_target))
     print("count_2", count_2)
 
     X_1 = np.array(fall_data)
     Y = np.array(fall_target)
+    check_list = np.array(check_list)
 
 
-    test_svm_classify(X_1, Y, rev_idx, 0.7)
+    test_svm_classify(X_1, Y, check_list, rev_idx, 0.7)
     
 
 

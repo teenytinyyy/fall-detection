@@ -23,18 +23,18 @@ def motion(img_list: list, img_a_idx: int, img_b_idx: int, thres: int):
 
 
 if __name__ == '__main__':
-    for j in range(1, 51):
-        # for k in range(1,9):
-        diff_list = []
-        #input = "./FDD_data_picture/data ("  + str(j) + "_" + str(k) + ")"
-        #output_path = "./motion/data ("  + str(j) + "_" + str(k) + ")/"
-        input = "./FDD_data_picture/data (" + str(j) + ")"
-        output_path = "./motion_9/dataset_15/data_" + str(j) + "/"
-        if not os.path.isdir(output_path):
-            os.makedirs(output_path)
-        images = imread_list(input)
-        for i in range(len(images) - 1):
-            diff_list.append(img_diff(images[i], images[i + 1]))
-            if i >= 15:
-                img = motion(diff_list, i - 15, i, 0)
-                cv2.imwrite(output_path + str(i) + ".jpg", img)
+    for j in range(1, 2):
+        for k in range(1,9):
+            diff_list = []
+            input = "../dataset/data/FDD_data_picture/data ("  + str(j) + "_" + str(k) + ")"
+            output_path = "../dataset/data/motion_3/data ("  + str(j) + "_" + str(k) + ")/"
+            #input = "./FDD_data_picture/data (" + str(j) + ")"
+            #output_path = "./motion_9/dataset_15/data_" + str(j) + "/"
+            if not os.path.isdir(output_path):
+                os.makedirs(output_path)
+            images = imread_list(input)
+            for i in range(len(images) - 1):
+                diff_list.append(img_diff(images[i], images[i + 1]))
+                if i >= 3:
+                    img = motion(diff_list, i - 3, i, 0)
+                    cv2.imwrite(output_path + str(i) + ".jpg", img)
