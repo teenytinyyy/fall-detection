@@ -58,7 +58,7 @@ if __name__ == '__main__':
             for idx, frame in enumerate(images):
                 # print(ret)
                 if check_point == True:
-                    # print(mask_box[-1])
+                    print(mask_box[-1])
                     prev_x1, prev_y1, prev_x2, prev_y2 = mask_box[-1]
                     frame, crop_x1, crop_y1 = image.crop_area(frame, prev_x1, prev_y1, prev_x2, prev_y2, 100)
                     crop = True
@@ -117,7 +117,6 @@ if __name__ == '__main__':
                             mask_box.append((mask_x1 + crop_x1, mask_y1 + crop_y1, mask_x2 + crop_x1, mask_y2 + crop_y1))
                         else:
                             mask_box.append((mask_x1, mask_y1, mask_x2, mask_y2))
-                        mask_box.append((mask_x1, mask_y1, mask_x2, mask_y2))
                         frame_nums.append(frame_num)
                         # print(frame_num)
                     else:
