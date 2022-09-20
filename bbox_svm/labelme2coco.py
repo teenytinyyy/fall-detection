@@ -7,7 +7,8 @@ from sklearn.model_selection import train_test_split
 np.random.seed(41)
 
 #0为背景
-classname_to_id = {"person": 1}
+classname_to_id = {"__background__": 0, 
+    "person": 1}
 
 class Lableme2CoCo:
 
@@ -54,7 +55,8 @@ class Lableme2CoCo:
         image = {}
         from labelme import utils
         img_x = utils.img_b64_to_arr(obj['imageData'])
-        h, w = img_x.shape
+        print(img_x.shape[0:2])
+        h, w = img_x.shape[0:2]
         image['height'] = h
         image['width'] = w
         image['id'] = self.img_id
@@ -94,7 +96,7 @@ class Lableme2CoCo:
 
 if __name__ == '__main__':
     labelme_path = "../dataset/data/8cam_data/labelme"
-    saved_coco_path = "../dataset/data/8cam_data/mask_rcnn_"
+    saved_coco_path = "../dataset/data/8cam_data/train_mask_rcnn_533_"
     # 创建文件
     if not os.path.exists("%scoco/annotations/"%saved_coco_path):
         os.makedirs("%scoco/annotations/"%saved_coco_path)

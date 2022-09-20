@@ -8,12 +8,14 @@ import files as file_utils
 
 
 def batch_read_img(file_name: str):
-    img_list = [cv2.imread(str(file)) for file in natsorted(glob.glob(file_name + "/*.jpg"))]
+    img_list = [cv2.imread(str(file))
+                for file in natsorted(glob.glob(file_name + "/*.jpg"))]
     return img_list
 
 
 def read_from_folder(folder_path: str) -> List[np.ndarray]:
-    img_path_list = file_utils.get_files(folder_path, [".jpg", ".png", ".jpeg"])
+    img_path_list = file_utils.get_files(
+        folder_path, [".jpg", ".png", ".jpeg"])
     img_list = []
 
     def filename_key(x: str):
@@ -68,17 +70,21 @@ def draw_dot(img, x, y, radius=2, color=(0, 0, 255)):
 
 
 def add_text(img, text, x, y):
-    cv2.putText(img, text=text, org=(int(x), int(y)), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=(0, 255, 255), lineType=cv2.LINE_AA)
+    cv2.putText(img, text=text, org=(int(x), int(y)), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=0.5, color=(0, 255, 255), lineType=cv2.LINE_AA)
 
 
 def display_bbox(img, x, y, w, h, output_path: Optional[str] = None, ratio_mode: bool = True):
 
     if ratio_mode:
         img_height, img_width, _ = img.shape
-        rect_start = (int((float(x) - float(w) / 2) * img_width), int((float(y) - float(h) / 2) * img_height))
-        rect_end = (int((float(x) + float(w) / 2) * img_width), int((float(y) + float(h) / 2) * img_height))
+        rect_start = (int((float(x) - float(w) / 2) * img_width),
+                      int((float(y) - float(h) / 2) * img_height))
+        rect_end = (int((float(x) + float(w) / 2) * img_width),
+                    int((float(y) + float(h) / 2) * img_height))
     else:
-        rect_start = (int(float(x) - float(w) / 2), int(float(y) - float(h) / 2))
+        rect_start = (int(float(x) - float(w) / 2),
+                      int(float(y) - float(h) / 2))
         rect_end = (int(float(x) + float(w) / 2), int(float(y) + float(h) / 2))
 
     cv2.rectangle(img, rect_start, rect_end, (0, 0, 255), 1)
@@ -91,6 +97,7 @@ def display_bbox(img, x, y, w, h, output_path: Optional[str] = None, ratio_mode:
     else:
         cv2.imwrite(output_path, img)
 
+
 def write_video(img_list: List[np.ndarray], des: str, frame_rate: int = 25):
     h, w, _ = img_list[0].shape
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -100,3 +107,23 @@ def write_video(img_list: List[np.ndarray], des: str, frame_rate: int = 25):
         writer.write(frame)
 
     writer.release()
+
+
+def crop_area(img: np.ndarray, x1: int, y1: int, x2: int, y2: int, expansion_range: int = 0):
+
+    y1 = y1 - expansion_range
+    y2 = y2 + expansion_range
+    x1 = x1 - expansion_range
+    x2 = x2 + expansion_range
+    if x1 < 0:
+        x1 = 0
+    if y1 < 0:
+        y1 = 0
+    if x2 > len(img[0]):
+        x2 = len(img[0])
+    if y2 > len(img):
+        y2 = len(img)
+    crop_img = img[y1:y2, x1:x2]
+
+
+    return crop_img, x1, y1

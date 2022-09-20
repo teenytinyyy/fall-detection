@@ -43,8 +43,7 @@ from detectron2.data.datasets.coco import load_coco_json
 import pycocotools
 
 #声明类别，尽量保持
-CLASS_NAMES =[
- "person",]
+CLASS_NAMES =["__background__", "person",]
 #  "bicycle",
 #  "car",
 #  "motorcycle",
@@ -128,11 +127,11 @@ CLASS_NAMES =[
 
 #tensorboard
 
-DATASET_ROOT = '../dataset/data/8cam_data/train_cocococo'
+DATASET_ROOT = '../dataset/data/8cam_data/train_mask_rcnn_533_coco'
 ANN_ROOT = os.path.join(DATASET_ROOT, 'annotations')
 
-TRAIN_PATH = os.path.join(DATASET_ROOT, 'images')
-VAL_PATH = os.path.join(DATASET_ROOT, 'images')
+TRAIN_PATH = os.path.join(DATASET_ROOT, 'images/train2017')
+VAL_PATH = os.path.join(DATASET_ROOT, 'images/val2017')
 
 TRAIN_JSON = os.path.join(ANN_ROOT, 'instances_train2017.json')
 VAL_JSON = os.path.join(ANN_ROOT, 'instances_val2017.json')
@@ -215,7 +214,7 @@ class Trainer(DefaultTrainer):
     """
 
     @classmethod
-    def build_evaluator(cls, cfg, dataset_name, output_folder=None):
+    def build_evaluator(cls, cfg, dataset_name, output_folder='../states/detectron_model/train_mask_rcnn_533'):
         """
         Create evaluator(s) for a given dataset.
         This uses the special metadata "evaluator_type" associated with each builtin dataset.
@@ -309,16 +308,16 @@ def setup(args):
     cfg.INPUT.CROP.ENABLED = True
     cfg.INPUT.MAX_SIZE_TRAIN = 720 # 训练图片输入的最大尺寸
     cfg.INPUT.MAX_SIZE_TEST = 720 # 测试数据输入的最大尺寸
-    cfg.INPUT.MIN_SIZE_TRAIN = (480, 720) # 训练图片输入的最小尺寸，可以设定为多尺度训练
-    cfg.INPUT.MIN_SIZE_TEST = 480
+    cfg.INPUT.MIN_SIZE_TRAIN = (150, 480) # 训练图片输入的最小尺寸，可以设定为多尺度训练
+    cfg.INPUT.MIN_SIZE_TEST = 150
     #cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING，其存在两种配置，分别为 choice 与 range ：
     # range 让图像的短边从 512-768随机选择
     #choice ： 把输入图像转化为指定的，有限的几种图片大小进行训练，即短边只能为 512或者768
-    cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING = 'range'
+    cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING = 'choice'
 #  本句一定要看下注释！！！！！！！！
     #cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128 
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
-    cfg.MODEL.RETINANET.NUM_CLASSES = 1  # 类别数+1（因为有background，也就是你的 cate id 从 1 开始，如果您的数据集Json下标从 0 开始，这个改为您对应的类别就行，不用再加背景类！！！！！）
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
+    cfg.MODEL.RETINANET.NUM_CLASSES = 2  # 类别数+1（因为有background，也就是你的 cate id 从 1 开始，如果您的数据集Json下标从 0 开始，这个改为您对应的类别就行，不用再加背景类！！！！！）
     # cfg.MODEL.ANCHOR_GENERATOR.SIZES = [[32, 64, 128, 256]]
     # cfg.MODEL.RETINANET.IN_FEATURES = ["p4", "p5", "p6","p7"]
     cfg.MODEL.RETINANET.FOCAL_LOSS_ALPHA = 0.05
@@ -341,7 +340,7 @@ def setup(args):
     #ITERS_IN_ONE_EPOCH = int(27000 / cfg.SOLVER.IMS_PER_BATCH)
 
     # 指定最大迭代次数
-    cfg.SOLVER.MAX_ITER = (ITERS_IN_ONE_EPOCH * 15) - 1 # 12 epochs，
+    cfg.SOLVER.MAX_ITER = (ITERS_IN_ONE_EPOCH * 12) - 1 # 12 epochs，
     # 初始学习率
     cfg.SOLVER.BASE_LR = 0.002
     # 优化器动能

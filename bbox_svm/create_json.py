@@ -35,7 +35,7 @@ def create_json_file(points, image_path, image_data, image_height, image_width, 
 
     points = list(points[0])
 
-    points = [[int(x) for x in p] for p in points]
+    points = [[float(x) for x in p] for p in points]
 
     json_data = {
         "version": "4.5.6",
