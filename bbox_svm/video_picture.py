@@ -3,11 +3,11 @@ import os
 
 i = 1
 #video_name = "Home_01_RGB"
-for i in range(1, 2):
+for i in range(1, 9):
     #cam = "video (" + str(i) + ")"
     #videoFile = "./Home_02/Videos/video (" + str(i) + ").avi"
-    videoFile = "./cam" + str(i) + ".avi"
-    output_path = "FDD_data_picture/data (" + str(i+1000) + ")/"
+    videoFile = "../dataset/data/8cam_dataset/chute1/cam" + str(i) + ".avi"
+    output_path = "../dataset/data/FDD_data_picture/RGBdata_1_" + str(i) + "/"
     if not os.path.isdir(output_path):
         os.makedirs(output_path)
 

@@ -16,6 +16,7 @@ def batch_read_img(file_name: str):
 def read_from_folder(folder_path: str) -> List[np.ndarray]:
     img_path_list = file_utils.get_files(
         folder_path, [".jpg", ".png", ".jpeg"])
+
     img_list = []
 
     def filename_key(x: str):
@@ -127,3 +128,6 @@ def crop_area(img: np.ndarray, x1: int, y1: int, x2: int, y2: int, expansion_ran
 
 
     return crop_img, x1, y1
+
+
+

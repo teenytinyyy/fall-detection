@@ -127,7 +127,7 @@ CLASS_NAMES =["__background__", "person",]
 
 #tensorboard
 
-DATASET_ROOT = '../dataset/data/8cam_data/train_mask_rcnn_533_coco'
+DATASET_ROOT = '../dataset/data/8cam_data/train_mask_rcnn_1282_coco'
 ANN_ROOT = os.path.join(DATASET_ROOT, 'annotations')
 
 TRAIN_PATH = os.path.join(DATASET_ROOT, 'images/train2017')
@@ -214,7 +214,7 @@ class Trainer(DefaultTrainer):
     """
 
     @classmethod
-    def build_evaluator(cls, cfg, dataset_name, output_folder='../states/detectron_model/train_mask_rcnn_533'):
+    def build_evaluator(cls, cfg, dataset_name, output_folder=None):
         """
         Create evaluator(s) for a given dataset.
         This uses the special metadata "evaluator_type" associated with each builtin dataset.

@@ -23,25 +23,27 @@ setup_logger()
 
 if __name__ == '__main__':
 
-    for num in range(1, 5):
+    for num in range(2, 25):
         for num1 in range(1, 9):
 
             start = time.time()
-            thresh_ratio = 0.1  # 20%閥值
+            thresh_ratio = 0  # 20%閥值
             video_name = "data (" + str(num) + "_" + str(num1) + ")"
             video_name_new = str(num) + "_" + str(num1)
+            # video_name = 'split' + str(num)
+            # video_name_new = 'split' + str(num)
             input_path = "../dataset/data/FDD_data_picture/" + video_name
-            output_path = '../dataset/data/json/mask_rcnn/train_533/' + video_name_new + "/"
+            output_path = '../dataset/data/json/mask_rcnn/mask_rcnn_1286/' + video_name_new + "/"
             if not os.path.isdir(output_path):
                 os.makedirs(output_path)
             images = [cv2.imread(file) for file in natsorted(
                 glob.glob(input_path + "/*.jpg"))]
 
-            model_file_path = '../states/detectron_model/train_mask_rcnn_533/config.yaml'
-            model_weights = "../states/detectron_model/train_mask_rcnn_533/model_final.pth"
+            model_file_path = '../states/detectron_model/mask_rcnn_1286/config.yaml'
+            model_weights = "../states/detectron_model/mask_rcnn_1286/model_final.pth"
             cfg = get_cfg()
             cfg.merge_from_file(model_file_path)
-            cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7
+            cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
             # cfg.MODEL.RETINANET.SCORE_THRESH_TEST = 0.7
             cfg.MODEL.WEIGHTS = model_weights
             predictor = DefaultPredictor(cfg)
@@ -57,11 +59,11 @@ if __name__ == '__main__':
             print("images#:", len(images))
             for idx, frame in enumerate(images):
                 # print(ret)
-                if check_point == True:
-                    print(mask_box[-1])
-                    prev_x1, prev_y1, prev_x2, prev_y2 = mask_box[-1]
-                    frame, crop_x1, crop_y1 = image.crop_area(frame, prev_x1, prev_y1, prev_x2, prev_y2, 100)
-                    crop = True
+                # if check_point == True:
+                #     # print(mask_box[-1])
+                #     prev_x1, prev_y1, prev_x2, prev_y2 = mask_box[-1]
+                #     frame, crop_x1, crop_y1 = image.crop_area(frame, prev_x1, prev_y1, prev_x2, prev_y2, 100)
+                #     crop = True
                 cv2.imwrite(output_path + "/" + video_name_new + "_" + "%d.jpg" % (frame_num), frame)
 
                 outputs = predictor(frame)
@@ -71,9 +73,9 @@ if __name__ == '__main__':
                 #print("single_prediction", single_prediction)
                 person_selection_mask = single_prediction["pred_classes"] == 1
                 predictions = {"pred_boxes": single_prediction["pred_boxes"].tensor[person_selection_mask].data.numpy(),
-                               "scores": single_prediction["scores"][person_selection_mask].data.numpy(),
-                               "pred_classes": single_prediction["pred_classes"][person_selection_mask].data.numpy(),
-                               "pred_masks": single_prediction["pred_masks"][person_selection_mask].data.numpy()}
+                                "scores": single_prediction["scores"][person_selection_mask].data.numpy(),
+                                "pred_classes": single_prediction["pred_classes"][person_selection_mask].data.numpy(),
+                                "pred_masks": single_prediction["pred_masks"][person_selection_mask].data.numpy()}
 
                 if len(predictions["pred_classes"]) != 0:
                     if predictions["pred_classes"][0] == 1:
@@ -109,10 +111,12 @@ if __name__ == '__main__':
                         # cv2.rectangle(frame, (box_x1, box_y1),
                         #               (box_x2, box_y2), (0, 255, 0), 2)
                         cv2.rectangle(frame, (mask_x1, mask_y1),
-                                      (mask_x2, mask_y2), (0, 0, 255), 3)
+                                        (mask_x2, mask_y2), (0, 0, 255), 3)
                         frame = Mask(mask_region).draw(
                             frame, color=(0, 0, 255), alpha=0.5)
                         bbox.append((box_x1, box_y1, box_x2, box_y2))
+                        cv2.imwrite(output_path + "/" + video_name_new + "_" + "%d_mask.jpg" % (frame_num), frame)
+
                         if crop == True:
                             mask_box.append((mask_x1 + crop_x1, mask_y1 + crop_y1, mask_x2 + crop_x1, mask_y2 + crop_y1))
                         else:
@@ -124,7 +128,7 @@ if __name__ == '__main__':
                 else:
                     check_point = False
 
-                cv2.imwrite(output_path + "/" + video_name_new + "_" + "%d_mask.jpg" % (frame_num), frame)
+                # cv2.imwrite(output_path + "/" + video_name_new + "_" + "%d_mask.jpg" % (frame_num), frame)
                 crop = False
                 frame_num += 1
                 # v = Visualizer(frame[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
@@ -139,5 +143,5 @@ if __name__ == '__main__':
             end = time.time()
             print(end - start)
             print(count)
-            # np.savetxt("../dataset/data/excel/mask_rcnn/" + video_name_new +
-            #            ".csv", np.c_[bbox, mask_box, frame_nums], delimiter=",")
+            np.savetxt("../dataset/data/excel/mask_rcnn_1286/" + video_name_new +
+                       ".csv", np.c_[bbox, mask_box, frame_nums], delimiter=",")

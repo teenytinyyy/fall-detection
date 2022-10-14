@@ -4,7 +4,7 @@ import numpy as np
 import glob
 import shutil
 from sklearn.model_selection import train_test_split
-np.random.seed(41)
+np.random.seed(42)
 
 #0为背景
 classname_to_id = {"__background__": 0, 
@@ -96,7 +96,7 @@ class Lableme2CoCo:
 
 if __name__ == '__main__':
     labelme_path = "../dataset/data/8cam_data/labelme"
-    saved_coco_path = "../dataset/data/8cam_data/train_mask_rcnn_533_"
+    saved_coco_path = "../dataset/data/8cam_data/train_mask_rcnn_1282_"
     # 创建文件
     if not os.path.exists("%scoco/annotations/"%saved_coco_path):
         os.makedirs("%scoco/annotations/"%saved_coco_path)
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     json_list_path = glob.glob(labelme_path + "/*.json")
     print(len(json_list_path))
     # 数据划分,这里没有区分val2017和tran2017目录，所有图片都放在images目录下
-    train_path, val_path = train_test_split(json_list_path, test_size=0.12)
+    train_path, val_path = train_test_split(json_list_path, test_size=0.001)
     print("train_n:", len(train_path), 'val_n:', len(val_path))
 
     # 把训练集转化为COCO的json格式
