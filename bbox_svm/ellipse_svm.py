@@ -141,10 +141,14 @@ if __name__ == "__main__":
             ang_v_list = []
             ang_a_list = []
             avg_list = []
+            long = []
+            short = []
 
             for row in rows:
                 x_data = [float(val) for val in row]
                 ar.append(x_data[0])
+                long.append(abs(x_data[3])*x_data[1]/x_data[2])
+                short.append(x_data[2])
                 angle_list.append(x_data[3])
                 box_top_center_y.append(x_data[4])
 
@@ -171,13 +175,17 @@ if __name__ == "__main__":
                         # ar_data.append(
                         #     min(avg_list[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
-                            max(ar[frame_idx - radius:frame_idx + radius]))
+                            max(long[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
-                            min(ar[frame_idx - radius:frame_idx + radius]))
+                            min(long[frame_idx - radius:frame_idx + radius]))
+                        #ar_data.append(
+                        #    max(short[frame_idx - radius:frame_idx + radius]))
+                        #ar_data.append(
+                        #    min(short[frame_idx - radius:frame_idx + radius]))
                         ar_data.append(
                             max(angle_list[frame_idx - radius:frame_idx + radius]))
-                        # ar_data.append(
-                        #    min(angle_list[frame_idx - radius:frame_idx + radius]))
+                        ar_data.append(
+                           min(angle_list[frame_idx - radius:frame_idx + radius]))
 
                         check_points.append(box_top_center_y[frame_idx - radius] - box_top_center_y[frame_idx + radius])
                         check_points.append(ar[frame_idx + radius])

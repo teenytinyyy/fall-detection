@@ -8,6 +8,7 @@ from sklearn.svm import SVC
 from sklearn.externals import joblib
 
 
+
 def random_indices(start: int, stop: int, step: int = 1) -> List[int]:
     indices = [idx for idx in range(start, stop, step)]
 
@@ -51,26 +52,26 @@ def get_avg_list(angle_list: List[float], avg_range: int = 13) -> List[float]:
     return avg_list
 
 
-def train_svm_classify(data: np.ndarray, target: np.ndarray, check_list: np.ndarray, rev_idx: Dict, train_ratio: float = 0.7):
+def test_svm_classify(data: np.ndarray, target: np.ndarray, check_list: np.ndarray, rev_idx: Dict, train_ratio: float = 0.7):
     randomized_indices = random_indices(0, len(data))
-    x_train = data[randomized_indices[0: int(train_ratio * len(data))]]
+    x_train = data[randomized_indices[0: int(train_ratio * len(data))]][:, 0]
     y_train = target[randomized_indices[0: int(train_ratio * len(data))]]
 
-    x_test = data[randomized_indices[int(train_ratio * len(data)): len(data)]]
+    x_test = data[randomized_indices[int(train_ratio * len(data)): len(data)]][:, 0]
+    print(len(x_test))
     y_test = target[randomized_indices[int(train_ratio * len(data)): len(data)]]
     check_points = check_list[randomized_indices[int(train_ratio * len(data)): len(data)]]
 
-    #clf = SVC()
-    #clf.fit(x_train, y_train)
-    #joblib.dump(clf,'svm_model_avg_list.pkl')
-    clf = joblib.load('svm_model.pkl')
-    y_predict = clf.predict(x_test)
 
-    for i in range(len(y_predict)):
-        if y_predict[i] == 1 and check_points[i][0] <= 0 and check_points[i][1] <= 1.5:
-            y_predict[i] = 1
-        else:
-            y_predict[i] = 0
+    clf = joblib.load('svm_model.pkl')
+
+    y_predict = clf.predict(x_test)
+    print(len(y_test), len(y_predict))
+    # for i in range(len(y_predict)):
+    #     if y_predict[i] == 1 and check_points[i][0] <= 0 and check_points[i][1] <= 1.5:
+    #         y_predict[i] = 1
+    #     else:
+    #         y_predict[i] = 0
 
     diff_indices = np.where(y_test ^ y_predict > 0)[0]
 
@@ -92,38 +93,27 @@ def train_svm_classify(data: np.ndarray, target: np.ndarray, check_list: np.ndar
     print("confusion matrix")
     print(confusion_mat)
 
+def testing_data(data:list, data_point:list, frame_idx:int, radius:int, step:int = 0):
+    data_point.append(max(data[frame_idx - radius + step:frame_idx + radius + step]))
+    data_point.append(min(data[frame_idx - radius + step:frame_idx + radius + step]))
+    return data_point
+    
 
 if __name__ == "__main__":
 
-    target = "../dataset/data/excel/2cam/svm_2cam_target.csv"
+    target_file = "../dataset/data/excel/2cam/svm_2cam_target.csv"
     unused = "../dataset/data/excel/2cam/2cam.csv"
     video_start = 1
     video_end = 221
     target_range = 13
-    threshold = 0.52
+    threshold = 0.6
     avg_range = 13
-    angle_list = []
-    ar = []
-    ar_data = []
-    box_top_center_x = []
-    box_top_center_y = []
-    box_bottom_right_x = []
-    box_bottom_right_y = []
-    check_points = []
-    check_list = []
-    fall_target = []
-    fall_data = []
-    labels = []
+
+    # count_2 = 0
     target_start = []
     target_end = []
     unused_num = []
-    idx = 0
-    count = 0
-    count_2 = 0
-    count_unused = 0
-    rev_idx = {}
-
-    with open(target, "r") as r_file:
+    with open(target_file, "r") as r_file:
         rows = csv.reader(r_file)
         for row in rows:
             target = [float(val) for val in row]
@@ -135,19 +125,34 @@ if __name__ == "__main__":
         for row in rows:
             unused_num.append(int(row[0]))
 
+    check_list = []
+    fall_target = []
+    fall_data = []
+    rev_idx = {}
+    count = 0
+    count_unused = 0
+
     for num in range(video_start, video_end + 1):
         file_path = "../dataset/data/excel/2cam/test_data (" + str(num) + ").csv"
-        # file = open(file_name, newline='')  with用完會幫你關，單用open 要自己關
-        # rows = csv.reader(file)
 
         if num == unused_num[count_unused]:
             count_unused += 1
             continue
-
         with open(file_path, "r") as r_file:
             rows = csv.reader(r_file)
+            ar = []
+            angle_list = []
+            box_top_center_y = []
+            box_top_center_x = []
+            box_bottom_right_x = []
+            box_bottom_right_y = []
+            ang_v_list = []
+            ang_a_list = []
+            avg_list = []
+            frame_num = []
+
             for row in rows:
-                x_data = [float(val) for val in row]
+                x_data = [float(val) for val in row]   #x1,y1,x2,y2
                 ar.append(x_data[0])
                 box_top_center_x.append(x_data[1])
                 box_top_center_y.append(x_data[2])
@@ -161,13 +166,12 @@ if __name__ == "__main__":
                 )
                 angle_list.append(ang)
 
-            radius = 30
-            frame_idx = 30
 
-            # y_top_v = get_diff_list(y_top_dis)
-            ang_v_list = get_diff_list(angle_list)
-            ang_a_list = get_diff_list(ang_v_list)
-            avg_list = get_abs_avg_list(ang_a_list, avg_range)
+        radius = 30
+        frame_idx = 30
+        ang_v_list = get_diff_list(angle_list)
+        ang_a_list = get_diff_list(ang_v_list)
+        avg_list = get_abs_avg_list(ang_a_list, avg_range)
 
 
         while True:
@@ -176,44 +180,48 @@ if __name__ == "__main__":
                 break
 
             if 2 > abs(ar[frame_idx] - ar[frame_idx + 4]) >= threshold:
-            # if avg_list[frame_idx] >= threshold * 0.1:
-
                 if (len(avg_list[frame_idx - radius: frame_idx + radius]) == radius * 2 and len(ar[frame_idx - radius: frame_idx + radius]) == radius * 2):
-                    ar_data.append(
-                        max(avg_list[frame_idx - radius:frame_idx + radius]))
-                    ar_data.append(
-                        min(avg_list[frame_idx - radius:frame_idx + radius]))
-                    ar_data.append(
-                        max(ar[frame_idx - radius:frame_idx + radius]))
-                    ar_data.append(
-                        min(ar[frame_idx - radius:frame_idx + radius]))
-                    #print(ar_data)
+                    # if target_end - 10 <= frame_num[frame_idx + radius] <= target_end + radius:
+                    #     split_video.append((num, num1, frame_num[frame_idx - radius], frame_num[frame_idx + radius], target_start, target_end, target_label))
+                    # frame_idx += radius
+                    # ar_data.append(
+                    #     max(avg_list[frame_idx - radius:frame_idx + radius]))
+                    # ar_data.append(
+                    #     min(avg_list[frame_idx - radius:frame_idx + radius]))
+                    ar_data = []
+                    batch_data = []
+                    check_points = []
+                    testing_data(avg_list, ar_data, frame_idx, radius, 0)
+                    testing_data(ar, ar_data, frame_idx, radius, 0)
+                    batch_data.append(ar_data)
+                    print(ar_data)
+                    ar_data = []
+                    testing_data(avg_list, ar_data, frame_idx, radius, 10)
+                    testing_data(ar, ar_data, frame_idx, radius, 10)
+                    batch_data.append(ar_data)                            
+                    ar_data = []
+                    testing_data(avg_list, ar_data, frame_idx, radius, 20)
+                    testing_data(ar, ar_data, frame_idx, radius, 20)
+                    batch_data.append(ar_data)   
+
+                    
                     check_points.append(box_top_center_y[frame_idx - radius] - box_top_center_y[frame_idx + radius])
                     check_points.append(ar[frame_idx + radius])
 
-                    fall_data.append(ar_data)
+                    fall_data.append(batch_data)
                     check_list.append(check_points)
 
 
-                    # if check_points[-1] > 1:
-                    #     fall_target.append(0)
-                    #     frame_idx += radius
-                    #     print("video:", num)
-                    #     print("picture:", frame_idx)
-                    #     print("label:", 0)
 
+                    #if target_label == 2:
                     if (frame_idx - radius <= target_start[num - 1] + target_range <= frame_idx + radius):
-                        # if check_points[-1] > 1:
-                        #     fall_target.append(2)                
-                        #     count_2 += 1
-
-                        # else:                                
+                        # else:                
+                        #print(frame_idx, target_start, target_end, target_label)                
                         fall_target.append(1)
-                        print("video:", num)
+                        #print("video:", num, num1)
                         print("picture:", frame_idx)
                         print("label:", 1)
-                        print("y", check_points)
-                        print(ar[frame_idx + radius])
+                        # print(ar[frame_idx + radius])
 
                         frame_idx += radius
                     else:
@@ -222,109 +230,31 @@ if __name__ == "__main__":
 
                     rev_idx[len(fall_target) - 1] = (
                         num,
+                        #num1,
                         frame_idx - radius,
+                        frame_idx + radius,
                         fall_target[-1],
                     )
 
+
                 count += 1
                 frame_idx += 1
-                ar_data = []
-                check_points = []
 
                 continue
 
 
             frame_idx += 1
+    # np.savetxt("../dataset/data/excel/mask_rcnn_1286/1286target_labeltest4.csv", np.c_[split_video], delimiter=",")
 
-        ar = []
-        angle_list = []
-        ang_v_list = []
-        ang_a_list = []
-        avg_list = []
-        box_top_center_x = []
-        box_top_center_y = []
-        box_bottom_right_x = []
-        box_bottom_right_y = []
 
     print("fall_target", len(fall_target))
     print("thres", count)
     print("fall", sum(fall_target))
-    print("count_2", count_2)
+    # print("count_2", count_2)
 
     X_1 = np.array(fall_data)
     Y = np.array(fall_target)
     check_list = np.array(check_list)
 
 
-    train_svm_classify(X_1, Y, check_list, rev_idx, 0.7)
-    
-
-
-'''
-    random_idx = random_indices(0, len(X_1))
-    x_1_train = X_1[random_idx[0:int(0.7 * len(X_1))]]
-    y_1_train = Y_1[random_idx[0:int(0.7 * len(X_1))]]
-    x_1_test = X_1[random_idx[int(0.7 * len(X_1)):len(X_1)]]
-    y_1_test = Y_1[random_idx[int(0.7 * len(X_1)):len(X_1)]]
-
-    x_2_train = X_2[random_idx[0:int(0.7 * len(X_2))]]
-    x_2_test = X_2[random_idx[int(0.7 * len(X_2)):len(X_2)]]
-
-    clf = SVC()
-    clf.fit(x_1_train, y_1_train)
-    # joblib.dump(clf, '../states/2cam.pkl')
-    clf_2 = SVC()
-    clf_2.fit(x_2_train, y_1_train)
-
-    y_1_predict = clf.predict(x_1_test)
-    y_2_predict = clf_2.predict(x_2_test)
-    # for i in range(len(y_1_predict)):
-    #     if y_1_predict[i] == 1 and y_2_predict[i] == 0:
-    #         y_1_predict[i] = 0
-    # elif y_1_predict[i] == 0 and y_2_predict[i] == 1:
-    #     y_1_predict[i] = 1
-    # print(i)
-    diff_idx = np.where(y_1_test ^ y_1_predict > 0)[0]
-
-    print("diff indices:")
-    print(diff_idx)
-
-    diff_dict = {}
-    for i in diff_idx:
-        restored_idx = random_idx[int(0.7 * len(X_1)):len(X_1)][i]
-        diff_dict[restored_idx] = [restored_idx, y_1_predict[i], y_1_test[i]]
-        print(rev_idx[restored_idx], diff_dict[restored_idx])
-
-
-    print("Diff count:{}".format(len(diff_dict.keys())))
-
-    idx_list = np.array(
-        random_idx[int(0.7 * len(X_1)):len(X_1)])[diff_idx].astype(np.uint8)
-
-    # print("source info")
-    # for i in idx_list:
-    #     print(i, rev_idx[i])
-
-    # print("XOR", y_test^y_predict)
-    # plt.scatter(x_test[:,0], x_test[:,1], c=y_predict)
-    # plt.savefig("t.png")
-
-    # for k, v in rev_idx.items():
-    #     print("rev", k, v)
-
-    confusion_mat = np.zeros((2, 2))
-    idx_pairs = np.array([y_1_predict.tolist(), y_1_test.tolist()]).T.tolist()
-    a = 0
-    for idx_pair in idx_pairs:
-        # print("gt", Y[random_idx[int(0.7 * len(X)):len(X)][a]], y_test[a])
-        confusion_mat[tuple(idx_pair)] += 1
-        a += 1
-
-    print("confusion matrix")
-    print(confusion_mat)
-    result = y_1_test ^ y_1_predict
-
-    print(sum(Y_1))
-    print("Accuracy: {:2f}% {} / {} / {}".format((1 - (result.sum() /
-          len(result))) * 100, sum(y_1_test), result.sum(), len(y_1_test)))
-'''
+    test_svm_classify(X_1, Y, check_list, rev_idx, 0)

@@ -129,5 +129,24 @@ def crop_area(img: np.ndarray, x1: int, y1: int, x2: int, y2: int, expansion_ran
 
     return crop_img, x1, y1
 
+def calculate_IOU(predicted_bound, ground_truth_bound):
+    px1, py1, px2, py2 = predicted_bound
+    gx1, gy1, gx2, gy2 = ground_truth_bound
+    parea = (px2 - px1) * (py2 - py1)
+    garea = (gx2 - gx1) * (gy2 - gy1)
+    
+    # 相交矩形座標
+    x1 = max(px1, gx1)
+    y1 = max(py1, gy1)
+    x2 = min(px2, gx2)
+    y2 = min(py2, gy2)
 
+    w = x2 - x1
+    h = y2 - y1
+    if w <= 0 or h <= 0:
+        return 0
 
+    area = w * h
+    IoU = area / (parea + garea - area)
+
+    return IoU

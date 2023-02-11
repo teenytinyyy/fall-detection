@@ -4,11 +4,10 @@ import numpy as np
 import glob
 import shutil
 from sklearn.model_selection import train_test_split
-np.random.seed(42)
+np.random.seed(44)
 
 #0为背景
-classname_to_id = {"__background__": 0, 
-    "person": 1}
+classname_to_id = {"__background__":0, "person": 1}
 
 class Lableme2CoCo:
 
@@ -96,7 +95,7 @@ class Lableme2CoCo:
 
 if __name__ == '__main__':
     labelme_path = "../dataset/data/8cam_data/labelme"
-    saved_coco_path = "../dataset/data/8cam_data/train_mask_rcnn_1282_"
+    saved_coco_path = "../dataset/data/8cam_data/train_mask_rcnn_1320_"
     # 创建文件
     if not os.path.exists("%scoco/annotations/"%saved_coco_path):
         os.makedirs("%scoco/annotations/"%saved_coco_path)

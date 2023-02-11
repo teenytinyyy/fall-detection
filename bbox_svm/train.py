@@ -127,7 +127,7 @@ CLASS_NAMES =["__background__", "person",]
 
 #tensorboard
 
-DATASET_ROOT = '../dataset/data/8cam_data/train_mask_rcnn_1282_coco'
+DATASET_ROOT = '../dataset/data/8cam_data/train_mask_rcnn_1320_coco'
 ANN_ROOT = os.path.join(DATASET_ROOT, 'annotations')
 
 TRAIN_PATH = os.path.join(DATASET_ROOT, 'images/train2017')
@@ -356,7 +356,7 @@ def setup(args):
     # 在训练之前，会做一个热身运动，学习率慢慢增加初始学习率
     cfg.SOLVER.WARMUP_FACTOR = 1.0 / 1000
     # 热身迭代次数
-    cfg.SOLVER.WARMUP_ITERS = 1000
+    cfg.SOLVER.WARMUP_ITERS = 1500
 
     cfg.SOLVER.WARMUP_METHOD = "linear"
     # 保存模型文件的命名数据减1
@@ -388,6 +388,7 @@ def main(args):
             res.update(Trainer.test_with_TTA(cfg, model))
         if comm.is_main_process():
             verify_results(cfg, res)
+
         return res
 
     """
